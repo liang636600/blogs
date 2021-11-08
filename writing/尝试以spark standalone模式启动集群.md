@@ -37,20 +37,20 @@
 
 **尝试解决JDK16中的`java.lang.IllegalAccessError: class org.apache.spark.storage.StorageUtils$ (in unnamed module @0x4097a8c6) cannot access class sun.nio.ch.DirectBuffer (in module java.base) because module java.base does not export sun.nio.ch to unnamed module @0x4097a8c6`问题**
 
-* 修改spark-defaults.conf.template文件，将最后一行修改为`spark.executor.extraJavaOptions  -XX:+PrintGCDetails -Dkey=value -Dnumbers="one two three" --illegal-access=permit`并去除#
+* 失败：修改spark-defaults.conf.template文件，将最后一行修改为`spark.executor.extraJavaOptions  -XX:+PrintGCDetails -Dkey=value -Dnumbers="one two three" --illegal-access=permit`并去除#
 
 ![image-20211101193153970](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211101193153970.png)
 
 修改过后并没有生效
 
-* 看到spark-defaults.conf
+* 失败：看到spark-defaults.conf
 
   ![image-20211104110551741](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211104110551741.png)
 
   以为与我的spark/conf下的spark-defaults.conf.template不一样，复制一份spark-defaults.conf.template文件并重命名为spark-defaults.conf，最终还是失败
 
 
-* spark-env.sh.template里面加入相关jvm配置
+* 失败：spark-env.sh.template里面加入相关jvm配置
 
   ![image-20211104124818702](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211104124818702.png)
 
@@ -58,20 +58,42 @@
 
   重新复制一份新命名为spark-env.sh再次尝试，发现依然不生效
 
-* spark-default.conf文件全部修改加上--illegal-access=permit
+* 失败：spark-default.conf文件全部修改加上--illegal-access=permit
 
   ![image-20211104101509729](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211104101509729.png)
 
   ![image-20211104101428437](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211104101428437.png)
 
-* 修改spark-env.sh中的Java_OPTS为![image-20211104173136989](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211104173136989.png)
+* 失败：修改spark-env.sh中的Java_OPTS为![image-20211104173136989](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211104173136989.png)
 
   仍未能解决
 
-* 尝试使用官方编译好的jdk16编译spark源码
+* 失败：尝试使用官方编译好的jdk16编译spark源码
 
   报的一样的错
 
-* 尝试使用官方编译好的spark和官方编译好的jdk16并修改conf文件夹下的spark-env.sh文件，发现仍为一样的错。使用官方编译好的spark和官方编译好的jdk15并修改conf文件夹下的spark-env.sh文件，发现正常运行测试用例。
+* 失败：尝试使用官方编译好的spark和官方编译好的jdk16并修改conf文件夹下的spark-env.sh文件，发现仍为一样的错。使用官方编译好的spark和官方编译好的jdk15并修改conf文件夹下的spark-env.sh文件，发现正常运行测试用例。
 
-* 
+* 尝试在spark-env.sh里加上SPARK_LAUNCHER_OPTS="--illegal-access=permit --add-exports=java.base/sun.nio.ch=ALL-UNNAMED"
+
+  ![image-20211108184046506](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211108184046506.png)
+  
+  启动master和worker，然后运行测试程序，相较于以前加上了`--conf "spark.driver.extraJavaOptions=--illegal-access=permit"  --conf "spark.executor.extraJavaOptions=--illegal-access=permit"`参数，在bin目录下，命令为
+  
+  `./spark-submit --master spark://iscas-Precision-3551:7077 --conf "spark.driver.extraJavaOptions=--illegal-access=permit"  --conf "spark.executor.extraJavaOptions=--illegal-access=permit" --class org.apache.spark.examples.SparkPi ../examples/target/scala-2.12/jars/spark-examples_2.12-3.2.0.jar 100`
+  
+  终于成功
+  
+  ![image-20211108185410271](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211108185410271.png)
+  
+  
+  
+  同理使用该方法spark-shell也能运行，在bin目录下，运行`./spark-shell --conf "spark.driver.extraJavaOptions=--illegal-access=permit"  --conf "spark.executor.extraJavaOptions=--illegal-access=permit"`
+  
+  成功
+  
+  ![image-20211108190521239](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211108190521239.png)
+  
+  
+  
+  
