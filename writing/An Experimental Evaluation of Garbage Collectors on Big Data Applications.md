@@ -224,16 +224,47 @@ spark应用的内存使用被数据特点（cached数据，shuffled数据及算�
    * CMS倾向于扩大老年代空间（并且不会缩小），与Parallel/g1相比，较大的老年区使得他有更少的full gc，但是，由于新生代空间减少，使得它的young gc频率是另外两个的两倍
    * G1倾向于根据GC pause time与heap usage的统计结果来平衡调整young/old heap space，在shuffle spill过后，它增大了新生代的大小以容纳读取的磁盘上的spilled records（这些records是long-lived的），需要更大的老年代空间，因此导致比CMS更高的full gc频率
 
-   **implication：** 当前的young/old generation sizing policy不适合容纳long-lived accumulated records，需要设计知晓在每个数据处理阶段
+   **implication：** 当前的young/old generation sizing policy不适合容纳long-lived accumulated records
+   
+3. 与CMS/G1相比，Parallel不恰当的generation resizing timing机制导致更多的full gc pause，parallel只能在full gc pause的时候resize old generation，而CMS与G1在young gc pause的时候也可以resize the old generation，这样减少了full gc pauses
 
+   **implication：** 要解决how and when to resize young/old generation问题
 
-​     
+4. 在回收long-lived accumulated records的时候，parallel的算法（mark-sweep-compact）效率比CMS/G1的并发标记算法效率低10倍
+
+   CMS/G1在标记的时候应用同时在运行，但当对象分配速度大于回收速度的时候，造成长时间full gc pause，这个时候并发标记退化为parallel使用的标记算法
+   
+   **implication：** 并发对象标记算法可以减少GC pause time的同时回收long-lived accumulated records，但是当对象回收速度小于对象分配速度的时候，可能产生concurrent mode failure
+   
+5. ParallelGC tasks suffer from 2.5-7.6x higher **CPU usage** than CMS and G1 tasks, due to 1.7-12x **more full GC pauses** and 10x **longer individual full GC pause**
+
+   **implication：** 减少full gc的频率和individual full gc pause
+
+6. G1相比另外两个需要更多的内存，因为它需要分配一个large native data structure remembered sets for keeping object information used for GC
+
+   **implication：** 对G1分配更多的内存或使用更好的数据结构
 
 ##### 4.3 Join results
 
+explore the combined **impact of long-lived accumulated records and massive temporary records** 
+
 ###### 4.3.1 Performance comparison results
 
+![image-20211109202900750](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211109202900750.png)
+
 ###### 4.3.2 Findings and their implications
+
+* Threshold-based full GC triggering conditions lead to frequent, but unnecessary full GC pauses towards the long- lived accumulated records. Due to different full GC triggering thresholds, ParallelGC suffers from 1.7x more full GC pauses than G1, and G1 suffers from 7x more full GC pauses than CMS. Figure.
+
+  **output phase:** the long-lived accumulated records are kept in memory and massive temporary output records are constantly generated
+
+  parallel在old generation满的时候full gc，CMS/G1在未满的时候full gc（G1在heap使用达到45%的时候full gc，CMS在heap使用达到92%时候full gc），因为long-lived accumulated records超过45%未到达92%，G1遭受连续的full gc
+
+  **implication：** 当前gc没有考虑数据对象的特点、大小和生命周期
+
+* Concurrent object marking algorithms used in CMS and G1 collectors are inefficient for handling long-lived accu- mulated records due to CPU contentions with CPU-intensive data operators
+
+  **implication：** design **new object marking algorithm** to balance GC pause and CPU usage of object marking.
 
 ##### 4.4 SVM results
 
