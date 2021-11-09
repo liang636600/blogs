@@ -31,24 +31,26 @@ apt-get install -y autoconf zip libx11-dev libxext-dev libxrender-dev libxtst-de
 * **使用下载的jdk15压缩包并配置环境变量**
 
   1. 到官网上下载jdk15压缩包（链接：http://jdk.java.net/java-se-ri/15）
+  
   2. 解压缩jdk15（tar -zxvf 压缩文件名）
+
   3. 配置环境变量（修改/etc/profile 文件），添加
+  
+     `export JAVA_HOME=/usr/lib/jvm/jdk-15
+     export CLASSPATH=$JAVA_HOME/lib
+     export PATH=:$PATH:$JAVA_HOME/bin`
 
-  `export JAVA_HOME=/usr/lib/jvm/jdk-15
-  export CLASSPATH=$JAVA_HOME/lib
-  export PATH=:$PATH:$JAVA_HOME/bin`
-
-  ​        JAVA_HOME右边的需要修改成自己的jdk15所在的路径
-
+     JAVA_HOME右边的需要修改成自己的jdk15所在的路径
+  
   4. `source /etc/profile`
 
 ## 四 编译jdk源码
 
  1. 进入jdk16的主目录，运行
 
-`bash configure --with-debug-level=slowdebug --disable-warnings-as-errors`
+    `bash configure --with-debug-level=slowdebug --disable-warnings-as-errors`
 
-​       这里的slowdebug是为了更好的看源码设置的
+    这里的slowdebug是为了更好的看源码设置的
 
 2. 安装bear  `sudo apt install -y bear`
 3. 最后`bear make images`慢慢等待编译过程了

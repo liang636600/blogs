@@ -1,4 +1,4 @@
-* **题目：**An Experimental Evaluation of Garbage Collectors on Big Data Applications
+* **题目：** An Experimental Evaluation of Garbage Collectors on Big Data Applications
 * **场景或问题：**
 * **结论：**
 * **思路或核心算法：**
@@ -26,11 +26,11 @@
 
 由于原因
 
-**1）**当对象很多的时候自动垃圾管理并不好
+**1）** 当对象很多的时候自动垃圾管理并不好
 
-**2）**大数据应用不同于传统应用，具有**数据密集**和**内存密集**的特点
+**2）** 大数据应用不同于传统应用，具有**数据密集**和**内存密集**的特点
 
-**3）**在内存中的对象有不同的生命周期
+**3）** 在内存中的对象有不同的生命周期
 
 导致大量gc开销
 
@@ -141,8 +141,8 @@ spark应用的内存使用被数据特点（cached数据，shuffled数据及算�
 三种profilers：
 
 * **execution time profiler**：measure execution time of each application and map/reduce task
-* **dataflow profiler：**collects the number and size of the records in each data processing phase
-* **resource profiler：**collects the CPU, memory usage, and GC metrics of each task.
+* **dataflow profiler：** collects the number and size of the records in each data processing phase
+* **resource profiler：** collects the CPU, memory usage, and GC metrics of each task.
 
 ##### 3.3.2 Performance comparison and analysis
 
@@ -154,7 +154,7 @@ spark应用的内存使用被数据特点（cached数据，shuffled数据及算�
 
   can be decomposed to: data computation time, shuffle spill time, and GC time. 如果gc时间是差异主要原因，我们对gc时间比较
 
-* **Fine-grained task execution time：**identifies the po- tential causes of the performance difference
+* **Fine-grained task execution time：** identifies the po- tential causes of the performance difference
 
 **gc模式比较：**
 
@@ -212,9 +212,22 @@ spark应用的内存使用被数据特点（cached数据，shuffled数据及算�
 
 ###### 4.2.2 Findings and their implications Finding
 
-1. **ParallelGC tasks trigger 1.5x more shuffle spills than CMS and G1 tasks**:主要是Parallel collector可用heap size最小，原因是Parallel collector有交换区占用一定空间，CMS也有同样的问题，但由于它的幸存区较小，影响不大
+1. **ParallelGC tasks trigger 1.5x more shuffle spills than CMS and G1 tasks**: 主要是Parallel collector可用heap size最小，原因是Parallel collector有交换区占用一定空间，CMS也有同样的问题，但由于它的幸存区较小，影响不大
 
    implication：设计动态的dynamic spill threshold根据运行时可用的堆大小来平衡spill time和spill frequency
+   
+2. 不同的young/old大小分配策略导致不同gc频率（因为long-lived accumulated records需要更大空间的老年区），通过分配大的老年区空间，CMS相比ParallelGC与G1，full gc次数减少约48%
+
+   三种gc算法都有适应性调整young/old heap size的策略（统计GC pause time与heap占用），然而这三种gc低效的generation sizing patterns导致high young或 high full gc频率。
+
+   * ParallelGC更倾向于根据heap occupancy来扩大或缩小老年代空间，ParallelGC限制了老年代的大小为66.6%的堆大小，并且当shuffle spill过后，ParallelGC减少了老年代大小，较小的老年区导致频繁的full gc
+   * CMS倾向于扩大老年代空间（并且不会缩小），与Parallel/g1相比，较大的老年区使得他有更少的full gc，但是，由于新生代空间减少，使得它的young gc频率是另外两个的两倍
+   * G1倾向于根据GC pause time与heap usage的统计结果来平衡调整young/old heap space，在shuffle spill过后，它增大了新生代的大小以容纳读取的磁盘上的spilled records（这些records是long-lived的），需要更大的老年代空间，因此导致比CMS更高的full gc频率
+
+   **implication：** 当前的young/old generation sizing policy不适合容纳long-lived accumulated records，需要设计知晓在每个数据处理阶段
+
+
+​     
 
 ##### 4.3 Join results
 
@@ -249,10 +262,3 @@ spark应用的内存使用被数据特点（cached数据，shuffled数据及算�
 ---
 
 #### 8 CONCLUSION
-
-
-
-
-
-
-

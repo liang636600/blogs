@@ -16,80 +16,82 @@
 
 在编译过程中碰到
 
-`Failed to execute goal com.github.siom79.japicmp:japicmp-maven-plugin:0.11.0:cmp (default) on project flink-core: Execution default of goal com.github.siom79.japicmp:japicmp-maven-plugin:0.11.0:cmp failed: A required class was missing while executing com.github.siom79.japicmp:japicmp-maven-plugin:0.11.0:cmp: javax/xml/bind/JAXBException`
+```
+Failed to execute goal com.github.siom79.japicmp:japicmp-maven-plugin:0.11.0:cmp (default) on project flink-core: Execution default of goal com.github.siom79.japicmp:japicmp-maven-plugin:0.11.0:cmp failed: A required class was missing while executing com.github.siom79.japicmp:japicmp-maven-plugin:0.11.0:cmp: javax/xml/bind/JAXBException
+```
 
 ![image-20211106120711755](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211106120711755.png)
 
 * 失败：尝试修改flink主目录下的pom文件为
 
-  
-
   ![image-20211106142828182](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211106142828182.png)
 
   后来发现在flink的pom文件中存在上述配置
 
-* 失败：尝试添加--add-modules java.xml.bind
+* 失败：尝试添加`--add-modules java.xml.bind`
 
   在pom.xml的build的plugin中添加
 
   ![image-20211107111207117](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211107111207117.png)
 
-发现not allowed
+  发现not allowed
 
 ![image-20211107111351557](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211107111351557.png)
 
 * 尝试在出错的模块flink-matrix-core里（pom文件）修改japicmp的依赖
-
-  `<build>
-  <plugins>
-  <!--  activate API compatibility checks  -->
-  <plugin>
-  <groupId>com.github.siom79.japicmp</groupId>
-  <artifactId>japicmp-maven-plugin</artifactId>
-  <dependencies>
-  <dependency>
-  <groupId>javax.xml.bind</groupId>
-  <artifactId>jaxb-api</artifactId>
-  <version>2.3.0</version>
-  </dependency>
-  <dependency>
-  <groupId>com.sun.xml.bind</groupId>
-  <artifactId>jaxb-impl</artifactId>
-  <version>2.3.0</version>
-  </dependency>
-  <dependency>
-  <groupId>com.sun.xml.bind</groupId>
-  <artifactId>jaxb-core</artifactId>
-  <version>2.3.0</version>
-  </dependency>
-  <dependency>
-  <groupId>javax.activation</groupId>
-  <artifactId>activation</artifactId>
-  <version>1.2.0</version>
-  </dependency>
-  </dependencies>
-  </plugin>
-  <plugin>
-  <groupId>org.apache.maven.plugins</groupId>
-  <artifactId>maven-jar-plugin</artifactId>
-  <executions>
-  <execution>
-  <goals>
-  <goal>test-jar</goal>
-  </goals>
-  </execution>
-  </executions>
-  </plugin>
-  </plugins>
-  </build>`
+  ```
+  <build> 
+  <plugins> 
+    <!--  activate API compatibility checks  -->  
+    <plugin> 
+      <groupId>com.github.siom79.japicmp</groupId>  
+      <artifactId>japicmp-maven-plugin</artifactId>  
+      <dependencies> 
+        <dependency> 
+          <groupId>javax.xml.bind</groupId>  
+          <artifactId>jaxb-api</artifactId>  
+          <version>2.3.0</version> 
+        </dependency>  
+        <dependency> 
+          <groupId>com.sun.xml.bind</groupId>  
+          <artifactId>jaxb-impl</artifactId>  
+          <version>2.3.0</version> 
+        </dependency>  
+        <dependency> 
+          <groupId>com.sun.xml.bind</groupId>  
+          <artifactId>jaxb-core</artifactId>  
+          <version>2.3.0</version> 
+        </dependency>  
+        <dependency> 
+          <groupId>javax.activation</groupId>  
+          <artifactId>activation</artifactId>  
+          <version>1.2.0</version> 
+        </dependency> 
+      </dependencies> 
+    </plugin>  
+    <plugin> 
+      <groupId>org.apache.maven.plugins</groupId>  
+      <artifactId>maven-jar-plugin</artifactId>  
+      <executions> 
+        <execution> 
+          <goals> 
+            <goal>test-jar</goal> 
+          </goals> 
+        </execution> 
+      </executions> 
+    </plugin> 
+  </plugins> 
+  </build>
+  
+  ```
   
   ![image-20211107113028758](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211107113028758.png)
   
-  报错显示javax.activation:activation:jar:1.2.0 这个版本的包在maven找不到
+  报错显示`javax.activation:activation:jar:1.2.0 `这个版本的包在maven找不到
   
   ![image-20211107113257577](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211107113257577.png)
   
-  修改javax.activation:activation版本为1.1.1，报错
+  修改`javax.activation:activation`版本为1.1.1，报错
   
   ![image-20211107113639758](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211107113639758.png)
   
@@ -154,7 +156,9 @@
 
 ### 尝试解决flink-hadoop-fs模块错误
 
-`Failed to execute goal on project flink-hadoop-fs: Could not resolve dependencies for project org.apache.flink:flink-hadoop-fs:jar:1.9.3: Could not find artifact jdk.tools:jdk.tools:jar:1.6 at specified path /home/iscas/Downloads/openjdk-16_linux-x64_bin/jdk-16/../lib/tools.jar`
+```
+Failed to execute goal on project flink-hadoop-fs: Could not resolve dependencies for project org.apache.flink:flink-hadoop-fs:jar:1.9.3: Could not find artifact jdk.tools:jdk.tools:jar:1.6 at specified path /home/iscas/Downloads/openjdk-16_linux-x64_bin/jdk-16/../lib/tools.jar
+```
 
 ![image-20211107165522534](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211107165522534.png)
 
@@ -173,9 +177,12 @@
 
 ### 尝试解决flink-runtime模块的错
 
-`[ERROR] /home/iscas/Downloads/flink-1.9.3-src/flink-1.9.3/flink-runtime/src/test/java/org/apache/flink/runtime/util/SerializedThrowableTest.java:[97,60] cannot find symbol
+```
+[ERROR] /home/iscas/Downloads/flink-1.9.3-src/flink-1.9.3/flink-runtime/src/test/java/org/apache/flink/runtime/util/SerializedThrowableTest.java:[97,60] cannot find symbol
 [ERROR]   symbol:   method defineClass(java.lang.String,byte[],int,int,java.lang.ClassLoader,java.security.ProtectionDomain)
-[ERROR]   location: variable UNSAFE of type sun.misc.Unsafe`这个错误前面出现过，原因是`sun.misc.Unsafe`模块里面没有defineClass方法，打开源码发现`org.apache.flink.core.memory.MemoryUtils`里面用了sun.misc.Unsafe，修改MemoryUtils文件，将里面的`sun.misc`改为`jdk.internal.misc`
+[ERROR]   location: variable UNSAFE of type sun.misc.Unsafe
+```
+这个错误前面出现过，原因是`sun.misc.Unsafe`模块里面没有defineClass方法，打开源码发现`org.apache.flink.core.memory.MemoryUtils`里面用了sun.misc.Unsafe，修改MemoryUtils文件，将里面的`sun.misc`改为`jdk.internal.misc`
 
 ![image-20211107190027659](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211107190027659.png)
 

@@ -4,7 +4,8 @@
 
 ![image-20211101111810677](https://raw.githubusercontent.com/liang636600/cloudImg/master/img/image-20211101111810677.png)
 
-`java.lang.IllegalAccessError: class org.apache.spark.storage.StorageUtils$ (in unnamed module @0x4097a8c6) cannot access class sun.nio.ch.DirectBuffer (in module java.base) because module java.base does not export sun.nio.ch to unnamed module @0x4097a8c6
+```
+java.lang.IllegalAccessError: class org.apache.spark.storage.StorageUtils$ (in unnamed module @0x4097a8c6) cannot access class sun.nio.ch.DirectBuffer (in module java.base) because module java.base does not export sun.nio.ch to unnamed module @0x4097a8c6
   at org.apache.spark.storage.StorageUtils$.<init>(StorageUtils.scala:213)
   at org.apache.spark.storage.StorageUtils$.<clinit>(StorageUtils.scala)
   at org.apache.spark.storage.BlockManagerMasterEndpoint.<init>(BlockManagerMasterEndpoint.scala:110)
@@ -25,9 +26,10 @@
               ^
 <console>:14: error: not found: value spark
        import spark.sql
-              ^`
+              ^
+```
 
-最终在（https://stackoverflow.com/questions/69710694/spark-unable-to-load-native-hadoop-library-for-platform）上面找到了和我一样的错
+最终在<https://stackoverflow.com/questions/69710694/spark-unable-to-load-native-hadoop-library-for-platform>上面找到了和我一样的错
 
 ![image-20211101112116436](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/cfad6899912738a7470bf3c25c2bab01.png)
 

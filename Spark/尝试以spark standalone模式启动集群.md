@@ -1,6 +1,6 @@
 # 尝试以spark standalone模式启动集群
 
-1. **启动master：**根据官方文档，运行master server `./sbin/start-master.sh`，可以打开浏览器输入url (http://localhost:8080/)获得spark web界面，需要记录一下spark界面的URL值
+1. **启动master：** 根据官方文档，运行master server `./sbin/start-master.sh`，可以打开浏览器输入url <http://localhost:8080/>获得spark web界面，需要记录一下spark界面的URL值
 2. **启动worker**：运行`./sbin/start-worker.sh spark://iscas-Precision-3551:7077`把`<master-spark-URL>`换成步骤1中的URL值，web界面如下
 
 注：关闭master和worker的命令分别为`sbin/stop-master.sh`与`sbin/stop-worker.sh`
@@ -74,7 +74,7 @@
 
 * 失败：尝试使用官方编译好的spark和官方编译好的jdk16并修改conf文件夹下的spark-env.sh文件，发现仍为一样的错。使用官方编译好的spark和官方编译好的jdk15并修改conf文件夹下的spark-env.sh文件，发现正常运行测试用例。
 
-* 尝试在spark-env.sh里加上SPARK_LAUNCHER_OPTS="--illegal-access=permit --add-exports=java.base/sun.nio.ch=ALL-UNNAMED"
+* 尝试在spark-env.sh里加上`SPARK_LAUNCHER_OPTS="--illegal-access=permit --add-exports=java.base/sun.nio.ch=ALL-UNNAMED"`
 
   ![image-20211108184046506](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211108184046506.png)
   
