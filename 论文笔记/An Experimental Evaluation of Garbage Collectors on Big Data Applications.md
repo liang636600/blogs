@@ -1,9 +1,3 @@
-* **题目：** An Experimental Evaluation of Garbage Collectors on Big Data Applications
-* **场景或问题：**
-* **结论：**
-* **思路或核心算法：**
-* **自我总结：**
-
 ---
 
 ### An Experimental Evaluation of Garbage Collectors on Big Data Applications
@@ -162,7 +156,7 @@ spark应用的内存使用被数据特点（cached数据，shuffled数据及算�
 
 1. **Memory allocation pattern**：analyze how different allocation policies affect the GC time
 
-2. **GC time and GC fre- quency pattern**：
+2. **GC time and GC frequency pattern**：
 
    像并发gc，gc time包含 **young GC time, full GC time, and concurrent GC time**，We compare these types of GC time across three collectors and **identify the most time-consuming GC phases**
 
@@ -186,7 +180,7 @@ spark应用的内存使用被数据特点（cached数据，shuffled数据及算�
 
 * **Long-lived accumulated records**：指的是内存中的shuffled records，这些数据很多且没有匹配的gc回收算法，造成经常和长时间的full gc
 
-  1. 这些records需要大量old generation来容纳，因此不正确的young/full generation sizing policy会导致经常full gc
+  1. 这些records需要大量old generation来容纳，因此**不正确的young/full generation sizing policy会导致经常full gc**
 
   2. 回收这些records is time-consuming及CPU-intensive
 
@@ -214,9 +208,9 @@ spark应用的内存使用被数据特点（cached数据，shuffled数据及算�
 
 1. **ParallelGC tasks trigger 1.5x more shuffle spills than CMS and G1 tasks**: 主要是Parallel collector可用heap size最小，原因是Parallel collector有交换区占用一定空间，CMS也有同样的问题，但由于它的幸存区较小，影响不大
 
-   implication：设计动态的dynamic spill threshold根据运行时可用的堆大小来平衡spill time和spill frequency
+   **implication**：**设计动态的dynamic spill threshold根据运行时可用的堆大小来平衡spill time和spill frequency**
    
-2. 不同的young/old大小分配策略导致不同gc频率（因为long-lived accumulated records需要更大空间的老年区），通过分配大的老年区空间，CMS相比ParallelGC与G1，full gc次数减少约48%
+2. **不同的young/old大小分配策略导致不同gc频率**（因为long-lived accumulated records需要更大空间的老年区），通过分配大的老年区空间，CMS相比ParallelGC与G1，full gc次数减少约48%
 
    三种gc算法都有适应性调整young/old heap size的策略（统计GC pause time与heap占用），然而这三种gc低效的generation sizing patterns导致high young或 high full gc频率。
 
@@ -226,21 +220,21 @@ spark应用的内存使用被数据特点（cached数据，shuffled数据及算�
 
    **implication：** 当前的young/old generation sizing policy不适合容纳long-lived accumulated records
    
-3. 与CMS/G1相比，Parallel不恰当的generation resizing timing机制导致更多的full gc pause，parallel只能在full gc pause的时候resize old generation，而CMS与G1在young gc pause的时候也可以resize the old generation，这样减少了full gc pauses
+3. 与CMS/G1相比，**Parallel不恰当的generation resizing timing机制导致更多的full gc pause** ，parallel只能在full gc pause的时候resize old generation，而CMS与G1在young gc pause的时候也可以resize the old generation，这样减少了full gc pauses
 
    **implication：** 要解决how and when to resize young/old generation问题
 
-4. 在回收long-lived accumulated records的时候，parallel的算法（mark-sweep-compact）效率比CMS/G1的并发标记算法效率低10倍
+4. **在回收long-lived accumulated records的时候，parallel的算法（mark-sweep-compact）效率比CMS/G1的并发标记算法效率低10倍**
 
    CMS/G1在标记的时候应用同时在运行，但当对象分配速度大于回收速度的时候，造成长时间full gc pause，这个时候并发标记退化为parallel使用的标记算法
    
-   **implication：** 并发对象标记算法可以减少GC pause time的同时回收long-lived accumulated records，但是当对象回收速度小于对象分配速度的时候，可能产生concurrent mode failure
+   **implication：** **并发对象标记算法可以减少GC pause time的同时回收long-lived accumulated records，但是当对象回收速度小于对象分配速度的时候，可能产生concurrent mode failure**
    
-5. ParallelGC tasks suffer from 2.5-7.6x higher **CPU usage** than CMS and G1 tasks, due to 1.7-12x **more full GC pauses** and 10x **longer individual full GC pause**
+5. **ParallelGC tasks suffer from 2.5-7.6x higher CPU usage than CMS and G1 tasks,** due to 1.7-12x **more full GC pauses** and 10x **longer individual full GC pause**
 
    **implication：** 减少full gc的频率和individual full gc pause
 
-6. G1相比另外两个需要更多的内存，因为它需要分配一个large native data structure remembered sets for keeping object information used for GC
+6. **G1相比另外两个需要更多的内存**，因为它需要分配一个large native data structure remembered sets for keeping object information used for GC
 
    **implication：** 对G1分配更多的内存或使用更好的数据结构
 
@@ -254,41 +248,103 @@ explore the combined **impact of long-lived accumulated records and massive temp
 
 ###### 4.3.2 Findings and their implications
 
-* Threshold-based full GC triggering conditions lead to frequent, but unnecessary full GC pauses towards the long- lived accumulated records. Due to different full GC triggering thresholds, ParallelGC suffers from 1.7x more full GC pauses than G1, and G1 suffers from 7x more full GC pauses than CMS. Figure.
+* 面对long- lived accumulated records，基于阈值触发的full gc 导致了频繁但不必要的full gc pause. full gc频率 parallel < G1 < CMS
 
-  **output phase:** the long-lived accumulated records are kept in memory and massive temporary output records are constantly generated
+  在**output phase** ，long-lived accumulated records被保存在内存中，大量temporary output records被持续产生
 
-  parallel在old generation满的时候full gc，CMS/G1在未满的时候full gc（G1在heap使用达到45%的时候full gc，CMS在heap使用达到92%时候full gc），因为long-lived accumulated records超过45%未到达92%，G1遭受连续的full gc
+  **parallel在old generation满的时候full gc，CMS/G1在未满的时候full gc**（G1在heap使用达到45%的时候full gc，CMS在heap使用达到92%时候full gc），因为long-lived accumulated records超过45%未到达92%，G1遭受连续的full gc
 
   **implication：** 当前gc没有考虑数据对象的特点、大小和生命周期
 
-* Concurrent object marking algorithms used in CMS and G1 collectors are inefficient for handling long-lived accu- mulated records due to CPU contentions with CPU-intensive data operators
+* 由于产生CPU contentions with CPU-intensive data operators，在CMS 与 G1中使用的Concurrent object marking algorithms在处理long-lived accumulated records低效
 
-  **implication：** design **new object marking algorithm** to balance GC pause and CPU usage of object marking.
+  **implication：** 设计新的 **object marking algorithm** 来平衡 GC pause 和 CPU usage of object marking.
 
 ##### 4.4 SVM results
 
+impact of **long-lived cached records and humongous data objects**
+
 ###### 4.4.1 Performance comparison results
+
+![image-20211110094543425](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211110094543425.png)
+
+**三种gc的compTime与SpillTime几乎没有区别**（因为SVM有lightweight shuffle，并且shuffled records是short-lived不会导致shuffle spill），但**每一个shuffled record都是巨大的对象**，导致三种gc在full gc的时候有95%的差异，**原因主要是对象太大，young generation大小不够，大对象直接分配到了old generation**（由于CMS的young generation较小并且20%的old generation被占用，Parallel的old generation最小，他们均有频繁的full gc问题，而G1由于有eager humongous object reclamation mechanism即允许gc在young gc的时候回收大对象，因此具有更小的full gc次数，但可能造成OOM错误）
 
 ###### 4.4.2 Findings and their implications
 
+* **对于大对象应用，G1的非连续region策略（主要是碎片问题）可能造成OOM错误**，解决方法是增大region size，但由于不同应用的大对象大小可能不同，正确设置region size的值成了问题
+
+  **implication：** region-based heap管理策略不适合大对象，增大region size减少了OOM错误的可能性，但也造成内存使用低效问题，设计算法来 **内存利用率** 和 **可靠性问题**
+
 ##### 4.5 PageRank results
+
+impact of **iterative long-lived accumulated records and long-lived cached records**
+
+由于在处理连续shuffle spill的时候内存泄漏，导致OOM
 
 ###### 4.5.1 Performance comparison results
 
+![image-20211110102331462](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211110102331462.png)
+
 ###### 4.5.2 Findings and their implications
+
+* 对于需要回收大量long-lived accumulated records的迭代记录，CMS（concurrent sweeping algorithm，在应用运行的时候Sweep unused objects）比G1（incremental sweeping algorithm）的性能好。
+
+  G1会根据live object occupancy使用两阶段来gc
+
+  1. **partly stop-the-world cleanup phase：**在每个full gc的最后，回收没有存活对象的old region，同时选出存活对象低于85%的old region作为candidate old region
+  2. **stop-the-world mixed collection phase**：回收candidate old regions和young region
+
+  **implication：** **对于大量对象频繁回收的应用，使用concurrent marking/sweeping算法更高效**
 
 ---
 
 #### 5 LESSONS AND INSIGHTS
 
+**To application developers：** 
+
+* **减少long-lived accumulated objects的使用**，可以尝试更高效的数据结构如Compressed Buffer Tree，尝试减少data aggregation operator的空间复杂度，同时增加partition number来减少shuffled records
+* **避免创建大对象**，可以把大对象分为小对象或者增大region-based gc中的region size
+* 对于**有data aggregation operator的应用，使用并发的gc**
+* 对于**CPU密集型的算子，使用分配更多的CPU核来减少CPU竞争**
+
+**To researchers：**
+
+* **通过prediction-based heap sizing policy减少GC频率**
+
+  当前heap sizing policy是基于history的，但由于spark应用具有许多不同的内存使用模式，基于历史的策略不能很好适应
+
+  基于predicted memory usage（比如线性回归）来调整young/old generation的大小
+
+* **通过lifecycle-aware object marking algorithm减少gc工作**
+
+  现在的object marking algorithms需要遍历整个对象图，建议使用精确标记存活对象，通过spark告诉gc对象特点比如对象在什么时候不用了
+
+* 通过overriding-based object sweeping algorithm减小迭代应用的gc工作，迭代应用的数据对象有固定的生命周期和固定大小
+
+  建议是an overriding-based object sweeping algorithm using region-based reclamation，我们**分配一个固定的连续空间来容纳这些每个迭代产生的long-lived accumulated records**，在一个迭代的最后，我们直接回收整块空间，这样就不需要在每个迭代mark和sweep the old records
+
 ---
 
 #### 6 DISCUSSION
 
+**DataFrames vs. RDDs**
+
+Spark SQL applications use DataFrames, , whose intermediate data are managed by an optimized memory manager named Tungsten，tungsten通过在binary data而不是java对象上运行sql操作提升了性能，换句话说，Tungsten stores the shuffled records in a serialized binary form and performs aggregation functions directly on the serialized objects，但目前tungsten只能在某些SQL操作上可用，例如，它需要operated data types which are fixed-width types such as int，double，date
+
+**CPU/memory size variation**
+
+**The generality of our finding**
+
 ---
 
 #### 7 RELATED WORK
+
+**Performance studies on big data applications**
+
+**Framework memory management optimization**
+
+**Garbage collection optimization for big data applications**
 
 ---
 
