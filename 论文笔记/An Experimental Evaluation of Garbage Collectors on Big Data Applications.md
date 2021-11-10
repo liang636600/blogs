@@ -292,7 +292,7 @@ impact of **iterative long-lived accumulated records and long-lived cached recor
 
   G1会根据live object occupancy使用两阶段来gc
 
-  1. **partly stop-the-world cleanup phase：**在每个full gc的最后，回收没有存活对象的old region，同时选出存活对象低于85%的old region作为candidate old region
+  1. **partly stop-the-world cleanup phase：** 在每个full gc的最后，回收没有存活对象的old region，同时选出存活对象低于85%的old region作为candidate old region
   2. **stop-the-world mixed collection phase**：回收candidate old regions和young region
 
   **implication：** **对于大量对象频繁回收的应用，使用concurrent marking/sweeping算法更高效**
