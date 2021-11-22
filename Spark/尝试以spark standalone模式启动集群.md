@@ -9,7 +9,19 @@
 
 - 使用jdk16测试
 
-​        测试主要是运行基于Spark的蒙特卡罗求PI的程序，进入$SPARK_HOME/bin目录下，执行命令`./spark-submit --master spark://iscas-Precision-3551:7077 --class org.apache.spark.examples.SparkPi ../examples/target/scala-2.12/jars/spark-examples_2.12-3.2.0.jar 100`，执行命令后，成功后预期显示`Pi is roughly 3.1411003141100315`，但我这里报错了，错误和运行spark-shell的时候错误一样
+​        测试主要是运行基于Spark的蒙特卡罗求PI的程序，进入$SPARK_HOME/bin目录下，执行命令`./spark-submit --master spark://iscas-Precision-3551:7077 --class org.apache.spark.examples.SparkPi ../examples/target/scala-2.12/jars/spark-examples_2.12-3.2.0.jar 100`
+
+（补充：运行命令./spark-submit --conf "spark.driver.extraJavaOptions=--illegal-access=permit"  --conf "spark.executor.extraJavaOptions=--illegal-access=permit" --class org.apache.spark.examples.SparkPi --master local ../examples/target/scala-2.12/jars/spark-examples_2.12-3.2.0.jar 100
+
+解释：
+
+--class org.apache.spark.examples.SparkPi表示此次执行的Main class
+
+--master local表示spark程序local执行
+
+../examples/target/scala-2.12/jars/spark-examples_2.12-3.2.0.jar为spark程序的示例包
+
+100表示迭代100次），执行命令后，成功后预期显示`Pi is roughly 3.1411003141100315`，但我这里报错了，错误和运行spark-shell的时候错误一样
 
 ![image-20211101175249353](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211101175249353.png)
 
@@ -93,7 +105,5 @@
   成功
   
   ![image-20211108190521239](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211108190521239.png)
-  
-  
   
   
