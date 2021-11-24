@@ -30,7 +30,7 @@ HDFS读数据过程
 
 HDFS写数据过程
 
-![IMG_20211117_152035](C:/Users/38403/Documents/Tencent%20Files/384030703/FileRecv/MobileFile/IMG_20211117_152035.jpg)
+![IMG_20211122_173151](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/IMG_20211122_173151.jpg)
 
 
 

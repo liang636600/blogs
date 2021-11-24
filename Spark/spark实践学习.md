@@ -354,7 +354,256 @@ flatMap将RDD每个元素传入f函数处理，f会返回0个或多个新元素�
 
 将整个partition直接传入匿名处理函数（输入是一个迭代器，输出也是迭代器），每个task只需调用匿名函数一次
 
+```scala
+sc.makeRDD(Array(1,3,3,5,7,9),2).mapPartitions(partitionIter=>{
+      val str = partitionIter.mkString
+      println("str"+str)
+      val newStr = str.filter(c=>c!='3'&&c!='5')
+      newStr.iterator
+    }).collect().foreach(println)
+```
 
+一般需要newStr类似的来存储数据，如果partition较大的话，这样就比较占空间，使用迭代器来优化
 
+```scala
+class NewIter(iter:Iterator[Int]) extends Iterator[Option[Char]] {
+  def hasNext:Boolean = {iter.hasNext}
+  def next={
+    val c =iter.next()
+    if((c!=3)&&(c!=5)) Option((c+48).toChar) else None
+   }
+}
+```
 
+```scala
+sc.makeRDD(Array(1,3,3,5,7,9),2).
+      mapPartitions(partitionIter=>new NewIter((partitionIter)).
+        filter(_.isDefined)).collect.foreach(c=>println(c.get))
+```
+
+### join
+
+join用于两个<key,value>键值对型RDD间的连接操作，就像natural join一样，key相同，两个RDD的value组成一个元组(value1,value2)
+
+```scala
+val thisRDD = sc.makeRDD(Array(("A",1),("A",3),("B",4)))
+    val otherRDD = sc.makeRDD(Array(("A",4),("A",5),("B",10)))
+    thisRDD.join(otherRDD).collect.foreach(println)
+```
+
+输出结果
+
+```
+(B,(4,10))
+(A,(1,4))
+(A,(1,5))
+(A,(3,4))
+(A,(3,5))
+```
+
+优化1：join前预处理，减少参与join计算的数据
+
+（1）去除两个RDD都不包含的key
+
+```scala
+ val thisRDD = sc.makeRDD(Array(("A",1),("A",3),("B",4),("C",2)))
+    val otherRDD = sc.makeRDD(Array(("A",4),("A",5),("B",10)))
+    val keys = thisRDD.keys.intersection(otherRDD.keys).collect()
+    val newThisRDD = thisRDD.filter(e=>keys.contains(e._1))
+    val newoOtherRDD = otherRDD.filter(e=>keys.contains(e._1))
+    newThisRDD.join(newoOtherRDD).collect.foreach(println)
+```
+
+（2）partitionBy重新分区，要求两个RDD的Partitioner相同且具有相同的partition数，这样两个RDD相同的Key基本在同一个分区中，shuffle操作为0
+
+```scala
+val thisRDD = sc.makeRDD(Array(("A",1),("A",3),("B",4),("C",2))).partitionBy(new HashPartitioner((3))).cache()
+    val otherRDD = sc.makeRDD(Array(("A",4),("A",5),("B",10))).partitionBy(new HashPartitioner((3))).cache()
+    println(thisRDD.count())
+    println(otherRDD.count())
+
+    thisRDD.join(otherRDD).collect.foreach(println)
+```
+
+### union
+
+简单合并两个rdd集合不去重，不会导致shuffle操作
+
+```
+RDD1.union(RDD2)
+```
+
+### intersection
+
+返回两个rdd的交集并去重
+
+```
+RDD1.intersection(RDD2)
+```
+
+使用partitionBy优化
+
+```scala
+val RDD1 = sc.makeRDD(Array(1,3,3,5,7)).map(n=>(n,1)).partitionBy(new HashPartitioner(3)).cache
+    val RDD2 = sc.makeRDD(Array(2,4,5,3,5)).map(n=>(n,1)).partitionBy(new HashPartitioner(3)).cache
+    RDD1.count()
+    RDD2.count()
+    RDD1.join(RDD2).keys.distinct().collect().foreach(println)
+```
+
+### groupBy
+
+groupBy(f)其中f匿名函数的返回值相同的分为一组<key,iterator>，有shuffle开销
+
+划分奇偶数
+
+```scala
+sc.makeRDD(Array(1,3,2,6,7,10)).groupBy(n=>n%2).collect().foreach(n=>println(n._1+":"+n._2.mkString("!")))
+```
+
+### groupByKey
+
+用于对RDD中<key,value>键值对进行分组，必须在内存中保存<key,valueList>，如果分组的目的是对同组元素操作如求和则建议使用reduceByKey或aggregateByKey，有shuffle开销，如果rdd一开始分好区并cache，后续groupByKey是没有shuffle开销
+
+```scala
+sc.makeRDD(Array(("A",1),("A",3),("B",2),("B",4),("C",6),("B",6))).groupByKey().collect().foreach(n=>println(n._1+":"+n._2.mkString("!")))
+```
+
+### reduceByKey
+
+对rdd中<key,value>key值相同的元素作合并处理，但不能改变归并后的数据类型
+
+```
+sc.makeRDD(Array(("A",1),("A",3),("B",2),("B",4),("C",6),("B",6))).reduceByKey((pre,cur)=>pre+cur).collect().foreach(println)
+```
+
+结果
+
+```
+(B,12)
+(A,4)
+(C,6)
+```
+
+reduceByKey会在partition内部对相同key对应元素进行func调用，内部归并完成后，相同的key会被shuffle到同一个partition，然后继续归并，直到该key的所有元素都被归并完毕，这样不需要shuffle RDD中的所有元素
+
+### aggregateByKey
+
+如果归并后的结果类型和RDD元素类型不同时使用aggregateByKey
+
+```scala
+sc.makeRDD(Array(("A",1),("A",3),("B",2),("B",4),("C",6),("B",6))).aggregateByKey("")((rs,e)=>rs+ " "+e,(pre,cur)=>pre+" "+cur).collect().foreach(println)
+```
+
+结果
+
+```
+(B, 2 4 6)
+(A, 1 3)
+(C, 6)
+```
+
+aggregateByKey中的第一个参数("")表示初始值（这里指字符串拼接的初始值），(rs,e)=>rs+ " "+e这部分表示的是在partition内部实现的操作（在每个partition内部将相同key对应的元素通过" "拼接起来），(pre,cur)=>pre+" "+cur表示每个partition之间采取的操作
+
+### cogroup
+
+cogroup以key为依据合并多个<key,value>键值对类型的RDD，然后组成(key,(Iter[w1],iter[w2]))
+
+```scala
+val thisRDD=sc.makeRDD(Array(("A",1),("A",3),("B",2),("B",4),("C",6),("B",6)))
+    val otherRDD=sc.makeRDD(Array(("A","hello"),("A","world"),("B","glad")))
+    thisRDD.cogroup(otherRDD).collect().foreach(n=>println(n._1+":"+n._2._1.mkString(" ")+"||"+n._2._2.mkString(" ")))
+
+```
+
+结果
+
+```
+B:2 4 6||glad
+A:1 3||hello world
+C:6||
+```
+
+## Action
+
+### collect
+
+### reduce
+
+用于rdd元素归并
+
+```scala
+println(sc.makeRDD(Array(1,3,3,5,7)).reduce((pre,cur)=>pre+cur))
+```
+
+### fold
+
+fold用于将rdd归并，它加了一个zero value来赋初始值，zero value在每个partition内部计算时都会用上，内部计算完毕后，计算各partition总的结果时，还会用到zero value作为初始值
+
+```
+val numRDD = sc.makeRDD(Array(1,3,3,5,7),3)
+    println(numRDD.getNumPartitions)
+    println(numRDD.fold(10)((pre,cur)=>pre+cur))
+```
+
+结果
+
+```
+3
+59
+```
+
+### aggregate
+
+用于rdd元素的归并处理，aggregate归并后的结果类型可以和rdd元素类型不一样
+
+```scala
+println(sc.makeRDD(Array(1,3,3,5,7)).aggregate("hello")((pre,cur)=>pre+" "+cur,(rs,e)=>rs+" "+e))
+```
+
+```
+hello hello 1 3 3 5 7
+```
+
+### foreachPartition
+
+用于遍历和处理rdd中的每个元素
+
+```
+val numRDD=sc.makeRDD(Array(1,3,3,5,7),2)
+numRDD.foreachPartition(iter=>println(iter.mkString(" ")))
+```
+
+```
+1 3
+3 5 7
+```
+
+### saveAsTextFile
+
+可以将rdd存储为指定目录下的文本文件
+
+path要指定为hdfs上的路径，如果存储到本地，则每个partition会输出到task所在的executor上，不会在driver端
+
+```scala
+val numRDD=sc.makeRDD(Array(1,3,3,5,7),2) numRDD.saveAsTextFile("/home/iscas/Desktop/he")
+```
+
+生成part-编号 文件，每个文件对应一个partition的内容，如果partition的内容为空，也会输出空文件，RDD中的元素会转为string，每个元素占一行
+
+### saveAsObjectFile
+
+可以将rdd存储为一个SequenceFile
+
+```
+RDD.saveAsObjectFile("path")
+```
+
+读取SequenceFile，转为rdd
+
+```
+sc.objectFile[Int]("path/").glom.collect
+```
+
+glom可以将partition转为一个Array
 
