@@ -1,0 +1,1 @@
+export JAVA_HOME=/home/iscas/Downloads/openjdk-16_linux-x64_bin/jdk-16

@@ -75,6 +75,12 @@
 
    运行`SPARK_HOME/bin/spark-submit --conf "spark.driver.extraJavaOptions=--illegal-access=permit"  --conf "spark.executor.extraJavaOptions=--illegal-access=permit" --class "SimpleApp" /home/iscas/Desktop/sparkapp/target/scala-2.12/simple-project_2.12-1.0.jar `
 
+   或者
+   
+   ```
+   ./spark-submit --master=spark://iscas-Precision-3551:7077 --conf "spark.driver.extraJavaOptions=--illegal-access=permit"  --conf "spark.executor.extraJavaOptions=--illegal-access=permit" --class "HelloObj" /home/iscas/Desktop/sparkapp/target/scala-2.12/simple-project_2.12-1.0.jar
+   ```
+   
    ![image-20211116234501116](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211116234501116.png)
 
 # 用maven编译打包java程序
@@ -319,12 +325,12 @@ textFile函数有一个参数为minPartitions，只是决定最终partition个�
 
   ```scala
   val numRDD = sc.makeRDD(Array((5,"tom"),(6,"ke"),(100)))
-      numRDD.map(n=>{
-        n match {
+  numRDD.map(n=>{
+      n match {
           case (id,name)=>(id,name)
           case _ =>(0,"error")
-        }
-      }).collect().foreach(println)
+      }
+  }).collect().foreach(println)
   ```
 
   进一步简化为`numRDD.map{case (id,name)=>(id,name);case _ =>(0,"error")}.collect().foreach(println)`
@@ -333,15 +339,15 @@ textFile函数有一个参数为minPartitions，只是决定最终partition个�
 
   ```scala
   val numRDD = sc.makeRDD(Array("hello","to","context","hello"))
-      numRDD.map(n=>(n,1)).reduceByKey((p,v)=>p+v).collect().foreach(println)
+  numRDD.map(n=>(n,1)).reduceByKey((p,v)=>p+v).collect().foreach(println)
   ```
 
 * map打标记用于分类
 
   ```scala
   val numRDD = sc.makeRDD(Array("hello","to","context","he","cd"))
-      val countRDD = numRDD.map(s=>(s(0),s)).groupByKey()
-      countRDD.collect().foreach(x=>println(x._1,x._2.mkString(":")))
+  val countRDD = numRDD.map(s=>(s(0),s)).groupByKey()
+  countRDD.collect().foreach(x=>println(x._1,x._2.mkString(":")))
   ```
 
   新建一个Iterator[String]并将其拼接在一起`println(Iterator("Baidu", "Google", "Runoob", "Taobao").mkString(":"))`
@@ -387,8 +393,8 @@ join用于两个<key,value>键值对型RDD间的连接操作，就像natural joi
 
 ```scala
 val thisRDD = sc.makeRDD(Array(("A",1),("A",3),("B",4)))
-    val otherRDD = sc.makeRDD(Array(("A",4),("A",5),("B",10)))
-    thisRDD.join(otherRDD).collect.foreach(println)
+val otherRDD = sc.makeRDD(Array(("A",4),("A",5),("B",10)))
+thisRDD.join(otherRDD).collect.foreach(println)
 ```
 
 输出结果
@@ -406,23 +412,23 @@ val thisRDD = sc.makeRDD(Array(("A",1),("A",3),("B",4)))
 （1）去除两个RDD都不包含的key
 
 ```scala
- val thisRDD = sc.makeRDD(Array(("A",1),("A",3),("B",4),("C",2)))
-    val otherRDD = sc.makeRDD(Array(("A",4),("A",5),("B",10)))
-    val keys = thisRDD.keys.intersection(otherRDD.keys).collect()
-    val newThisRDD = thisRDD.filter(e=>keys.contains(e._1))
-    val newoOtherRDD = otherRDD.filter(e=>keys.contains(e._1))
-    newThisRDD.join(newoOtherRDD).collect.foreach(println)
+val thisRDD = sc.makeRDD(Array(("A",1),("A",3),("B",4),("C",2)))
+val otherRDD = sc.makeRDD(Array(("A",4),("A",5),("B",10)))
+val keys = thisRDD.keys.intersection(otherRDD.keys).collect()
+val newThisRDD = thisRDD.filter(e=>keys.contains(e._1))
+val newoOtherRDD = otherRDD.filter(e=>keys.contains(e._1))
+newThisRDD.join(newoOtherRDD).collect.foreach(println)
 ```
 
 （2）partitionBy重新分区，要求两个RDD的Partitioner相同且具有相同的partition数，这样两个RDD相同的Key基本在同一个分区中，shuffle操作为0
 
 ```scala
 val thisRDD = sc.makeRDD(Array(("A",1),("A",3),("B",4),("C",2))).partitionBy(new HashPartitioner((3))).cache()
-    val otherRDD = sc.makeRDD(Array(("A",4),("A",5),("B",10))).partitionBy(new HashPartitioner((3))).cache()
-    println(thisRDD.count())
-    println(otherRDD.count())
+val otherRDD = sc.makeRDD(Array(("A",4),("A",5),("B",10))).partitionBy(new HashPartitioner((3))).cache()
+println(thisRDD.count())
+println(otherRDD.count())
 
-    thisRDD.join(otherRDD).collect.foreach(println)
+thisRDD.join(otherRDD).collect.foreach(println)
 ```
 
 ### union
@@ -445,10 +451,10 @@ RDD1.intersection(RDD2)
 
 ```scala
 val RDD1 = sc.makeRDD(Array(1,3,3,5,7)).map(n=>(n,1)).partitionBy(new HashPartitioner(3)).cache
-    val RDD2 = sc.makeRDD(Array(2,4,5,3,5)).map(n=>(n,1)).partitionBy(new HashPartitioner(3)).cache
-    RDD1.count()
-    RDD2.count()
-    RDD1.join(RDD2).keys.distinct().collect().foreach(println)
+val RDD2 = sc.makeRDD(Array(2,4,5,3,5)).map(n=>(n,1)).partitionBy(new HashPartitioner(3)).cache
+RDD1.count()
+RDD2.count()
+RDD1.join(RDD2).keys.distinct().collect().foreach(println)
 ```
 
 ### groupBy
@@ -511,8 +517,8 @@ cogroup以key为依据合并多个<key,value>键值对类型的RDD，然后组�
 
 ```scala
 val thisRDD=sc.makeRDD(Array(("A",1),("A",3),("B",2),("B",4),("C",6),("B",6)))
-    val otherRDD=sc.makeRDD(Array(("A","hello"),("A","world"),("B","glad")))
-    thisRDD.cogroup(otherRDD).collect().foreach(n=>println(n._1+":"+n._2._1.mkString(" ")+"||"+n._2._2.mkString(" ")))
+val otherRDD=sc.makeRDD(Array(("A","hello"),("A","world"),("B","glad")))
+thisRDD.cogroup(otherRDD).collect().foreach(n=>println(n._1+":"+n._2._1.mkString(" ")+"||"+n._2._2.mkString(" ")))
 
 ```
 
@@ -542,8 +548,8 @@ fold用于将rdd归并，它加了一个zero value来赋初始值，zero value�
 
 ```
 val numRDD = sc.makeRDD(Array(1,3,3,5,7),3)
-    println(numRDD.getNumPartitions)
-    println(numRDD.fold(10)((pre,cur)=>pre+cur))
+println(numRDD.getNumPartitions)
+println(numRDD.fold(10)((pre,cur)=>pre+cur))
 ```
 
 结果
@@ -558,7 +564,7 @@ val numRDD = sc.makeRDD(Array(1,3,3,5,7),3)
 用于rdd元素的归并处理，aggregate归并后的结果类型可以和rdd元素类型不一样
 
 ```scala
-println(sc.makeRDD(Array(1,3,3,5,7)).aggregate("hello")((pre,cur)=>pre+" "+cur,(rs,e)=>rs+" "+e))
+println(sc.makeRDD(Array(1,3,3,5,7)).aggregate("hello")((pre,cur)=>pre+" "+cur, rs,e)=>rs+" "+e))
 ```
 
 ```
@@ -607,3 +613,18 @@ sc.objectFile[Int]("path/").glom.collect
 
 glom可以将partition转为一个Array
 
+## checkpoint
+
+checkpoint可以将RDD序列化为文件存储到HDFS中，当使用此RDD时，可以从HDFS中读取回复，而不需要重新计算
+
+```scala
+sc.setCheckpointDir("/home/iscas/Desktop/check")
+val numRDD=sc.makeRDD(Array(1,3,3,5,7))
+numRDD.checkpoint()
+numRDD.collect().foreach(println)
+numRDD.collect().foreach(println)
+```
+
+## RDD存储方式
+
+可以调用persist指定其他存储方式，由numRDD.persist(StorageLevel.xxxx),xxxx可取DISK_ONLY,MEMORY_ONLY,MEMORY_AND_DISK等，如果后续不再使用，可以调用unpersist来释放资源
