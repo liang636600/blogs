@@ -628,3 +628,19 @@ numRDD.collect().foreach(println)
 ## RDD存储方式
 
 可以调用persist指定其他存储方式，由numRDD.persist(StorageLevel.xxxx),xxxx可取DISK_ONLY,MEMORY_ONLY,MEMORY_AND_DISK等，如果后续不再使用，可以调用unpersist来释放资源
+
+## 操作本地和HDFS文件
+
+```scala
+// 读取hdfs上的文件
+val rdd = sc.textFile("hdfs://iscas-Precision-3551:9001/user/iscas/input/he.txt")
+// 读取本地文件
+val rdd = sc.textFile("file:///etc/hosts")
+// 保存到hdfs上
+rdd.saveAsTextFile("hdfs://iscas-Precision-3551:9001/user/iscas/myrdd")
+// 保存到本地
+rdd.saveAsTextFile("file:///home/iscas/Desktop/rdd")
+```
+
+
+
