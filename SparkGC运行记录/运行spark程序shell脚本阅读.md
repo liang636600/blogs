@@ -56,11 +56,11 @@ $table_hdfs_file $output_hdfs_dir 2>&1 | tee $logFile
 
 结合该函数应该是GroupBy，所以该脚本的功能是将IP前两位作为key，groupby
 
-### logFile
+### 3 logFile
 
 程序运行期间的log放在logFile中
 
-### 运行的Scala文件
+### 4 运行的Scala文件
 
 运行的是`applications.sql.rdd.RDDGroupByTest`这个文件
 
@@ -331,24 +331,3 @@ $input_file $iter $dimension 2>&1 | tee $logFile
 # 运行PageRank
 
 在sampledata中没有发现Twitter相关数据
-
-# 尝试运行GroupBy的完整数据
-
-## 阅读htmlgen
-
-### 文件夹data_files
-
-里面三个数据文件`keywords.dat`,`country_codes_plus_languages.dat`,`user_agents.dat`
-
-![image-20211128145011125](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211128145011125.png)
-
-### 文件夹genhtml
-
-生成html和统计URL频率
-
----
-
-## 尝试使用hibench生成数据
-
-
-
