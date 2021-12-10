@@ -22,6 +22,8 @@
 
    merge后，当前分支有了分支A的最新状态，当前分支再次与分支A作比较，behind(0) ahead(1+1)
 
+   当前分支与分支A比较发现，ahead(0)，behind(1)，然后当前分支merge分支A，在history里面出现的是分支A的最新的commit概述，而不是merge branch 分支A
+
 2. **squash and merge：** squash and merge将分支A的多次commit压缩成了一次commit，merge过后，当前分支再次与分支A作比较，发现仍然是behind(3) ahead(2+1)，ahead加1的意思就是刚刚squash一次，但再次选择squash and merge的时候，提示没有什么改变，感觉使用squash and merge容易在compare branch的时候产生混淆
 
    **可以先在分支A处把3次commit squash一下，后面直接create a merge commit**
@@ -63,3 +65,16 @@
 
 如果你想要一个干净的，没有merge commit的线性历史树，那么你应该选择git rebase
 如果你想保留完整的历史记录，并且想要避免重写commit history的风险，你应该选择使用git merge
+
+# gist
+
+gist主要用于存放一些小的代码片段（以文件的形式）
+
+创建gist：打开<https://gist.github.com/>就是新建一个gist
+
+查看自己的所有gists：选择your gists
+
+![image-20211210140630133](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211210140630133.png)
+
+分享：通过gist链接分享
+
