@@ -38,7 +38,7 @@ git放在对象库里的对象只有四种类型
 * 记录提交概述信息，例如`git commit -m "first commit"`
 * 记录详细提交信息，执行`git commit`后会提醒输入，第一行是概述，第二行空行，第三行详细信息
 
-一次性执行add与commit命令`git commit -am`
+一次性执行add与commit命令`git commit -am "概述信息"` 
 
 ---
 
@@ -65,6 +65,8 @@ git放在对象库里的对象只有四种类型
 ---
 
 显示所有分支`git branch`，*表示当前所在的分支
+
+显示包括remote在内的所有分支`git branch -a`
 
 创建分支`git branch feature-A`
 
@@ -97,15 +99,31 @@ git log命令只能查看以当前状态为终点的历史日志，这里使用`
 
 ---
 
-添加远程仓库`git remote add origin git@github.com:liang636600/myrepo.git`
+添加远程仓库`git remote add origin git@github.com:username/repoName.git`
 
-推送至远程仓库`git push`，`git push -u origin master`，推送当前分支至origin的master分支
+推送至远程仓库`git push`，`git push -u origin master`，推送当前分支至origin的master分支，-u参数可以在推送的同时，将origin仓库的master分支设置为本地仓库当前分支的upstream
 
+---
 
+克隆远程仓库到本地`git clone https://github.com/RegiusGal/liangTest.git`
 
+列出所有分支`git branch -a`
 
+![image-20211210165030327](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211210165030327.png)
 
+本地只有main分支，如果想要获得远程的my1分支，`git checkout -b my1 origin/my1`
 
+如果整个项目是从用户甲fork过来的，，github desktop采用甲/项目的模式，也可以在github desktop的branch选项点击`upstream/某分支`，自动在本地创建该分支，我的github远端是没有该分支的，在本地修改该分支，有push upstream的选项，但实际上不行（因为权限不够，只能是collaborator才使用这种方法）。
 
-配置提交作者和邮件`git config --gglobal user.name "John"`与`git config --global user.email "abc@163.com"`
+github desktop出现的branch分三部分
+
+* 我本地的branch
+* 我github远端的origin修饰（我在本地有一个分支A，要想给upstream发送pull request，我的github远端也要有分支A）
+* upstream远端的（必然存在upstream/main）
+
+获取最新的远程仓库分支`git pull origin feature-D`
+
+---
+
+配置提交作者和邮件`git config --global user.name "John"`与`git config --global user.email "abc@163.com"`
 
