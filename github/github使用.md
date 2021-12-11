@@ -76,5 +76,5 @@ gist主要用于存放一些小的代码片段（以文件的形式）
 
 ![image-20211210140630133](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211210140630133.png)
 
-分享：通过gist链接分享
+分享：通过gist链接分享，拷贝链接即可
 
