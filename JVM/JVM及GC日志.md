@@ -54,8 +54,37 @@ HotSpot所有功能的日志都收归到了“-Xlog”参数上`-Xlog[:[selector
 
 ---
 
+**gc参数：**
+
+-verbose:gc 控制台打印 gc 日志
+
 -Xms 堆初始大小
 
 -Xmx 堆最大大小
 
 -Xmn 新生代大小
+
+---
+
+**将gc日志输出到文件：**
+
+GC日志输出到文件路径 
+
+* `-Xloggc:/path/to/gc.log`
+
+每次启动用时间戳命名日志文件
+
+* 使用-%t作为日志文件名
+
+  `-Xloggc:/path/to/gc-%t.log`
+
+  生成的文件名是这种：gc-2021-03-29_20-41-47.log
+
+---
+
+**gc日志分析工具：**
+
+* 网站：<https://gceasy.io/>
+
+---
+

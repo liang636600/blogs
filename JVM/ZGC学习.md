@@ -62,6 +62,8 @@ Linux/x86-64平台上的ZGC使用了多重映射（Multi-Mapping）将多个不�
 
 ![image-20211207112125792](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211207112125792.png)
 
+![image.png](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image203-1024x399.png)
+
 * 并发标记（Concurrent Mark）：与G1、Shenandoah一样，并发标记是遍历对象图做可达性分析的阶段，前后也要经过类似于G1、Shenandoah的初始标记、最终标记（尽管ZGC中的名字不叫这些）的短暂停顿，而且这些停顿阶段所做的事情在目标上也是相类似的。与G1、Shenandoah不同的是， **ZGC的标记是在指针上而不是在对象上进行的，标记阶段会更新染色指针中的Marked 0、Marked 1标志位** 。
 * 并发预备重分配（Concurrent Prepare for Relocate）： **这个阶段需要根据特定的查询条件统计得出本次收集过程要清理哪些Region，将这些Region组成重分配集（Relocation Set）** 。重分配集与G1收集器的回收集（Collection Set）还是有区别的，ZGC划分Region的目的并非为了像G1那样做收益优先的增量回收。相反， **ZGC每次回收都会扫描所有的Region，用范围更大的扫描成本换取省去G1中记忆集的维护成本** 。因此， **ZGC的重分配集只是决定了里面的存活对象会被重新复制到其他的Region中，里面的Region会被释放，而并不能说回收行为就只是针对这个集合里面的Region进行** ，因为 **标记过程是针对全堆的** 。此外，在JDK 12的ZGC中开始支持的类卸载以及弱引用的处理，也是在这个阶段中完成的。
 * 并发重分配（Concurrent Relocate）：重分配是ZGC执行过程中的核心阶段，这个过程要把 **重分配集中的存活对象复制到新的Region上，并为重分配集中的每个Region维护一个转发表（Forward Table），记录从旧对象到新对象的转向关系** 。得益于染色指针的支持， **ZGC收集器能仅从引用上就明确得知一个对象是否处于重分配集之中** （relocate指针）， **如果用户线程此时并发访问了位于重分配集中的对象，这次访问将会被预置的内存屏障所截获，然后立即根据Region上的转发表记录将访问转发到新复制的对象上，并同时修正更新该引用的值，使其直接指向新对象，ZGC将这种行为称为指针的“自愈”（Self-Healing）能力** 。这样做的好处是只有第一次访问旧对象会陷入转发，也就是只慢一次，对比Shenandoah的Brooks转发指针，那是每次对象访问都必须付出的固定开销，简单地说就是每次都慢，因此ZGC对用户程序的运行时负载要比Shenandoah来得更低一些。还有另外一个直接的好处是由于染色指针的存在， **一旦重分配集中某个Region的存活对象都复制完毕后，这个Region就可以立即释放用于新对象的分配（但是转发表还得留着不能释放掉）** ，哪怕堆中还有很多指向这个对象的未更新指针也没有关系，这些旧指针一旦被使用，它们都是可以自愈的。
@@ -105,4 +107,101 @@ ZGC在重分配集中的某个region存活对象移动完后，可以立即释�
 ![image-20211211153139419](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211211153139419.png)
 
 ![image-20211211153247929](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211211153247929.png)
+
+# ZGC实践
+
+**重要参数配置样例：**
+
+-Xms10G -Xmx10G 
+
+-XX:ReservedCodeCacheSize=256m -XX:InitialCodeCacheSize=256m 
+
+-XX:+UnlockExperimentalVMOptions -XX:+UseZGC 
+
+-XX:ConcGCThreads=2 -XX:ParallelGCThreads=6 
+
+-XX:ZCollectionInterval=120 -XX:ZAllocationSpikeTolerance=5 
+
+-XX:+UnlockDiagnosticVMOptions -XX:-ZProactive 
+
+-Xlog:safepoint,classhisto*=trace,age*,gc*=info:file=/opt/logs/logs/gc-%t.log:time,tid,tags:filecount=5,filesize=50m 
+
+
+
+**-Xms：** 初始堆大小
+
+**-Xmx：** 最大堆大小
+
+这里都设置为10G，程序的堆内存将保持10G不变。
+
+**-XX:ReservedCodeCacheSize -XX:InitialCodeCacheSize**: 设置CodeCache的大小， JIT编译的代码都放在CodeCache中，一般服务64m或128m就已经足够。
+
+**-XX:+UnlockExperimentalVMOptions -XX:+UseZGC**：启用ZGC的配置。
+
+**-XX:ConcGCThreads**：并发回收垃圾的线程。默认是总核数的12.5%，8核CPU默认是1。调大后GC变快，但会占用程序运行时的CPU资源，吞吐会受到影响。
+
+**-XX:ParallelGCThreads**：STW阶段使用线程数，默认是总核数的60%。
+
+**-XX:ZCollectionInterval**：ZGC发生的最小时间间隔，单位秒。
+
+**-XX:ZAllocationSpikeTolerance**：ZGC触发自适应算法的修正系数，默认2，数值越大，越早的触发ZGC。
+
+**-XX:+UnlockDiagnosticVMOptions -XX:-ZProactive**：是否启用主动回收，默认开启，这里的配置表示关闭。
+
+**-Xlog**：设置GC日志中的内容、格式、位置以及每个日志的大小。
+
+---
+
+**理解ZGC触发时机**
+
+ZGC有多种GC触发机制，总结如下：
+
+- **阻塞内存分配请求触发**：当垃圾来不及回收，垃圾将堆占满时，会导致部分线程阻塞。我们应当避免出现这种触发方式。日志中关键字是“Allocation Stall”。
+- **基于分配速率的自适应算法**：最主要的GC触发方式，其算法原理可简单描述为”ZGC根据近期的对象分配速率以及GC时间，计算出当内存占用达到什么阈值时触发下一次GC”。自适应算法的详细理论可参考彭成寒《新一代垃圾回收器ZGC设计与实现》一书中的内容。通过ZAllocationSpikeTolerance参数控制阈值大小，该参数默认2，数值越大，越早的触发GC。我们通过调整此参数解决了一些问题。日志中关键字是“Allocation Rate”。
+- **基于固定时间间隔**：通过ZCollectionInterval控制，适合应对突增流量场景。流量平稳变化时，自适应算法可能在堆使用率达到95%以上才触发GC。流量突增时，自适应算法触发的时机可能会过晚，导致部分线程阻塞。我们通过调整此参数解决流量突增场景的问题，比如定时活动、秒杀等场景。日志中关键字是“Timer”。
+- **主动触发规则**：类似于固定间隔规则，但时间间隔不固定，是ZGC自行算出来的时机，我们的服务因为已经加了基于固定时间间隔的触发机制，所以通过-ZProactive参数将该功能关闭，以免GC频繁，影响服务可用性。日志中关键字是“Proactive”。
+- **预热规则**：服务刚启动时出现，一般不需要关注。日志中关键字是“Warmup”。
+- **外部触发**：代码中显式调用System.gc()触发。日志中关键字是“System.gc()”。
+- **元数据分配触发**：元数据区不足时导致，一般不需要关注。日志中关键字是“Metadata GC Threshold”。
+
+---
+
+**理解ZGC日志**
+
+![image-20211212110539434](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211212110539434.png)
+
+注意：该日志过滤了进入安全点的信息。正常情况，在一次GC过程中还穿插着进入安全点的操作。
+
+GC日志中每一行都注明了GC过程中的信息，关键信息如下：
+
+- **Start**：开始GC，并标明的GC触发的原因。上图中触发原因是自适应算法。
+- **Phase-Pause Mark Start**：初始标记，会STW。
+- **Phase-Pause Mark End**：再次标记，会STW。
+- **Phase-Pause Relocate Start**：初始转移，会STW。
+- **Heap信息**：记录了GC过程中Mark、Relocate前后的堆大小变化状况。High和Low记录了其中的最大值和最小值，我们一般关注High中Used的值，如果达到100%，在GC过程中一定存在内存分配不足的情况，需要调整GC的触发时机，更早或者更快地进行GC。
+- **GC信息统计**：可以定时的打印垃圾收集信息，观察10秒内、10分钟内、10个小时内，从启动到现在的所有统计信息。利用这些统计信息，可以排查定位一些异常点。
+
+---
+
+**理解ZGC停顿原因**
+
+在实战过程中共发现了6种使程序停顿的场景，分别如下：
+
+- **GC时，初始标记**：日志中Pause Mark Start。
+
+- **GC时，再标记**：日志中Pause Mark End。
+
+- **GC时，初始转移**：日志中Pause Relocate Start。
+
+- **内存分配阻塞**：当内存不足时线程会阻塞等待GC完成，关键字是"Allocation Stall"。
+
+- **安全点**：所有线程进入到安全点后才能进行GC，ZGC定期进入安全点判断是否需要GC。先进入安全点的线程需要等待后进入安全点的线程直到所有线程挂起。
+
+- **dump线程、内存**：比如jstack、jmap命令。
+
+  ![image.png](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image207-1024x61.png)
+
+  ![image.png](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image208-1024x85.png)
+
+---
 

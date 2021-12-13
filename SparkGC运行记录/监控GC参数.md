@@ -12,6 +12,8 @@ jvm options在jdk11后出现了改动，以下的jvm参数改动
 
 因此修改`GroupByRDD-sample.sh`里的内容
 
+![image-20211212163635213](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211212163635213.png)
+
 ```
 --conf "spark.driver.extraJavaOptions=--illegal-access=permit -XX:+UseZGC  -verbose:gc -Xlog:gc:/tmp/Drivergc.log -Xlog:gc* -Xlog:::time,level,tags -Xlog:safepoint"  --conf spark.executor.extraJavaOptions="--illegal-access=permit -XX:+UseZGC  -verbose:gc -Xlog:gc:/tmp/executorgc.log -Xlog:gc* -Xlog:::time,level,tags -Xlog:safepoint" 
 ```
