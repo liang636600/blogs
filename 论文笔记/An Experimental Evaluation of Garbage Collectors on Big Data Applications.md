@@ -1,8 +1,5 @@
----
 
 ### An Experimental Evaluation of Garbage Collectors on Big Data Applications
-
----
 
 #### ABSTRACT:
 
@@ -148,7 +145,7 @@ spark应用的内存使用被数据特点（cached数据，shuffled数据及算�
 
   can be decomposed to: data computation time, shuffle spill time, and GC time. 如果gc时间是差异主要原因，我们对gc时间比较
 
-* **Fine-grained task execution time：** identifies the po- tential causes of the performance difference
+* **Fine-grained task execution time：** identifies the potential causes of the performance difference
 
 **gc模式比较：**
 
@@ -180,7 +177,7 @@ spark应用的内存使用被数据特点（cached数据，shuffled数据及算�
 
 * **Long-lived accumulated records**：指的是内存中的shuffled records，这些数据很多且没有匹配的gc回收算法，造成经常和长时间的full gc
 
-  1. 这些records需要大量old generation来容纳，因此**不正确的young/full generation sizing policy会导致经常full gc**
+  1. 这些records需要大量old generation来容纳，因此**不正确的young/full generation sizing policy会导致经常full gc**（例如finding2和3）
 
   2. 回收这些records is time-consuming及CPU-intensive
 
@@ -248,17 +245,17 @@ explore the combined **impact of long-lived accumulated records and massive temp
 
 ###### 4.3.2 Findings and their implications
 
-* 面对long- lived accumulated records，基于阈值触发的full gc 导致了频繁但不必要的full gc pause. full gc频率 parallel < G1 < CMS
+7. 面对long- lived accumulated records，基于阈值触发的full gc 导致了频繁但不必要的full gc pause. full gc频率 parallel < G1 < CMS
 
-  在**output phase** ，long-lived accumulated records被保存在内存中，大量temporary output records被持续产生
+在**output phase** ，long-lived accumulated records被保存在内存中，大量temporary output records被持续产生
 
-  **parallel在old generation满的时候full gc，CMS/G1在未满的时候full gc**（G1在heap使用达到45%的时候full gc，CMS在heap使用达到92%时候full gc），因为long-lived accumulated records超过45%未到达92%，G1遭受连续的full gc
+**parallel在old generation满的时候full gc，CMS/G1在未满的时候full gc**（G1在heap使用达到45%的时候full gc，CMS在heap使用达到92%时候full gc），因为long-lived accumulated records超过45%未到达92%，G1遭受连续的full gc
 
-  **implication：** 当前gc没有考虑数据对象的特点、大小和生命周期
+**implication：** 当前gc没有考虑数据对象的特点、大小和生命周期
 
-* 由于产生CPU contentions with CPU-intensive data operators，在CMS 与 G1中使用的Concurrent object marking algorithms在处理long-lived accumulated records低效
+8. 由于产生CPU contentions with CPU-intensive data operators，在CMS 与 G1中使用的Concurrent object marking algorithms在处理long-lived accumulated records低效
 
-  **implication：** 设计新的 **object marking algorithm** 来平衡 GC pause 和 CPU usage of object marking.
+**implication：** 设计新的 **object marking algorithm** 来平衡 GC pause 和 CPU usage of object marking.
 
 ##### 4.4 SVM results
 
@@ -272,9 +269,9 @@ impact of **long-lived cached records and humongous data objects**
 
 ###### 4.4.2 Findings and their implications
 
-* **对于大对象应用，G1的非连续region策略（主要是碎片问题）可能造成OOM错误**，解决方法是增大region size，但由于不同应用的大对象大小可能不同，正确设置region size的值成了问题
+9. **对于大对象应用，G1的非连续region策略（主要是碎片问题）可能造成OOM错误**，解决方法是增大region size，但由于不同应用的大对象大小可能不同，正确设置region size的值成了问题
 
-  **implication：** region-based heap管理策略不适合大对象，增大region size减少了OOM错误的可能性，但也造成内存使用低效问题，设计算法来 **内存利用率** 和 **可靠性问题**
+**implication：** region-based heap管理策略不适合大对象，增大region size减少了OOM错误的可能性，但也造成内存使用低效问题，设计算法来 **内存利用率** 和 **可靠性问题**
 
 ##### 4.5 PageRank results
 
@@ -288,14 +285,14 @@ impact of **iterative long-lived accumulated records and long-lived cached recor
 
 ###### 4.5.2 Findings and their implications
 
-* 对于需要回收大量long-lived accumulated records的迭代记录，CMS（concurrent sweeping algorithm，在应用运行的时候Sweep unused objects）比G1（incremental sweeping algorithm）的性能好。
+10. 对于需要回收大量long-lived accumulated records的迭代记录，CMS（concurrent sweeping algorithm，在应用运行的时候Sweep unused objects）比G1（incremental sweeping algorithm）的性能好。
 
-  G1会根据live object occupancy使用两阶段来gc
+G1会根据live object occupancy使用两阶段来gc
 
-  1. **partly stop-the-world cleanup phase：** 在每个full gc的最后，回收没有存活对象的old region，同时选出存活对象低于85%的old region作为candidate old region
-  2. **stop-the-world mixed collection phase**：回收candidate old regions和young region
+1. **partly stop-the-world cleanup phase：** 在每个full gc的最后，回收没有存活对象的old region，同时选出存活对象低于85%的old region作为candidate old region
+2. **stop-the-world mixed collection phase**：回收candidate old regions和young region
 
-  **implication：** **对于大量对象频繁回收的应用，使用concurrent marking/sweeping算法更高效**
+**implication：** **对于大量对象频繁回收的应用，使用concurrent marking/sweeping算法更高效**
 
 ---
 
