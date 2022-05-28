@@ -180,6 +180,38 @@ CMS与G1在标记阶段后的处理，未能得到妥善的解决，CMS使用标
 
 Shenandoah和ZGC，几乎整个工作过程全部都是并发的，只有初始标记、最终标记这些阶段有短暂的停顿，这部分停顿的时间基本上是固定的，与堆的容量、堆中对象的数量没有正比例关系。实际上，它们都可以在任意可管理的（譬如现在ZGC只能管理4TB以内的堆）堆容量下，实现垃圾收集的停顿都不超过十毫秒这种以前听起来是天方夜谭、匪夷所思的目标。
 
+## young gc
+
+Eden->Survivor，Survivor->Old，Eden总大小是动态调整的
+
+* Normal Young GC
+
+  eden->survivor, survivor->old
+
+* Concurrent Start
+
+  当old region占比超过阈值（the Initiating Heap Occupancy threshold），Concurrent Start young collection
+
+## mixed gc
+
+Eden->Survivor，Survivor->Old， Old->Old
+
+![img](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/heap-mixed-cycle.png)
+
+```
+They operate with the goal of collecting as quickly and as frequently as possible. They do this to minimize the number of allocated Eden / Survivor regions in order to maximize the number of Old regions selected within the soft pause target.
+```
+
+Humongous allocations总是会触发concurrent marking cycle
+
+## full gc
+
+full gc在g1中是single-threaded operation
+
+
+
+G1有一个hard-margin，由G1ReservePercent定义，默认10%
+
 ---
 
 # Shenandoah收集器
