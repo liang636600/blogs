@@ -84,32 +84,51 @@ public class BatchJob {
 
 # 3 打包
 
-1. 先打开Project Structure
+1. 在pom文件里加入插件配置
 
-   ![img](http://note.youdao.com/yws/public/resource/142045618fddd3b61b649a2ddb60f681/xmlnote/15D41C45EFDA4CA8951AB0705590B13A/20912)
+   ```xml
+   <!-- 打jar包插件(会包含所有依赖) -->
+   			<plugin>
+   				<groupId>org.apache.maven.plugins</groupId>
+   				<artifactId>maven-assembly-plugin</artifactId>
+   				<version>2.6</version>
+   				<configuration>
+   					<descriptorRefs>
+   						<descriptorRef>jar-with-dependencies</descriptorRef>
+   					</descriptorRefs>
+   					<archive>
+   						<manifest>
+   							<!-- 可以设置jar包的入口类(可选) -->
+   							<mainClass>org.example.BatchJob</mainClass>
+   						</manifest>
+   					</archive>
+   				</configuration>
+   				<executions>
+   					<execution>
+   						<id>make-assembly</id>
+   						<phase>package</phase>
+   						<goals>
+   							<goal>single</goal>
+   						</goals>
+   					</execution>
+   				</executions>
+   			</plugin>
+   ```
 
-2. 选择好项目的入口类
+2. 这里的入口类要修改成main函数在的类
 
-   ![img](http://note.youdao.com/yws/public/resource/142045618fddd3b61b649a2ddb60f681/xmlnote/37B260455A0F45EBB5BBF10ED6938676/20923)
+   ![img](https://www.programminghunter.com/images/51/58/58258c95a8ed795ec55d000fe6c4ae93.png)
 
-3. ![img](http://note.youdao.com/yws/public/resource/142045618fddd3b61b649a2ddb60f681/xmlnote/637B395415D24A5288E6CD8CB68FA4F1/20937)
+3. 打包，前提是已经运行了程序生成有target文件夹
 
-4. 开始build
+   ![image-20220601095205433](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20220601095205433.png)
 
-   ![img](http://note.youdao.com/yws/public/resource/142045618fddd3b61b649a2ddb60f681/xmlnote/BB6C6E718455496DB5CBA7A90FA2B395/20941)
+   ![img](https://www.programminghunter.com/images/865/5f/5f4d60f0a682d00e917db5927d0cbc39.png)
 
-   ![img](http://note.youdao.com/yws/public/resource/142045618fddd3b61b649a2ddb60f681/xmlnote/842123F037834924A8EF00D6DC5890A6/20945)
-
-   
-
-5. 打包完成
-
-   ![img](http://note.youdao.com/yws/public/resource/142045618fddd3b61b649a2ddb60f681/xmlnote/1DC1B5E8F135466DA5E918461AB6103C/20949)
-
-6. 命令行运行
+4. 选择with-dependencies的jar发布到集群上
 
    ```
-   ./bin/flink run
+   ./bin/flink run ~/HelloFlink-1.0-SNAPSHOT-jar-with-dependencies.jar
    ```
 
 # 4 去掉命令行输出的多余INFO信息
