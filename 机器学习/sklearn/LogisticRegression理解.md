@@ -161,6 +161,10 @@ _lbfgsb.setulb(m, x, low_bnd, upper_bnd, nbd, f, g, factr,
                        isave, dsave, maxls)
 ```
 
+_lbfgsb.setulb具体实现在.pyd文件中
+
+![image-20220621202744965](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20220621202744965.png)
+
 f与g更新的地方
 
 ```
