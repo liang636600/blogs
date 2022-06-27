@@ -4,7 +4,7 @@
 import numpy as np
 # dtype表示array里每个数值的类型, np.float
 array = np.array([[1,2,3],[2,3,4]],dtype=np.int)
-# 全为0的矩阵 (3,4)表示数据shape
+# 全为0的矩阵 (3,4)表示数据shape  np.zeros(10)
 zeros = np.zeros((3,4))
 zerolike = np.zeros_like(array)
 # 全为1的矩阵
@@ -31,6 +31,14 @@ b = array[[0,1],[2,1]]
 ```
 
 ## 生成随机数据
+
+### 伪随机数生成
+
+可以用NumPy的np.random.seed更改随机数生成种子,这样生成的随机数是确定的
+
+```python
+np.random.seed(1234)
+```
 
 ### numpy.random.normal(0 均值,1 方差,num 数量)
 
@@ -97,6 +105,7 @@ np.random.shuffle(a)
 ```python
 A = np.arange(12).reshape((3,4))
 # 切片所得的数据与原数组数据关联
+# 如果你想要得到的是ndarray切片的一份副本而非视图，就需要明确地进行复制操作，例如arr[5:8].copy()
 # 索引行数
 b = A[2]
 # 对某行某列
@@ -108,11 +117,16 @@ b = array[:2,1]
 # 如果在切片的时候用了:，则数据维度不变
 b = array[:1,1:2] # [[100]]
 # 布尔型数据索引，得到的结果与原数组不关联是一个副本
+# Python关键字and和or在布尔型数组中无效。要使用&与|
+# 为了将data中的所有负值都设置为0 data[data < 0] = 0
 boolarr = [True,False,True] # 对行，这里选取第0,2行
 b = A[boolarr]
 # for循环默认迭代array的行
 for row in A:
     print(row)
+# 为了以特定顺序选取行子集，只需传入一个用于指定顺序的整数列表或ndarray即可
+# 花式索引跟切片不一样，它总是将数据复制到新数组中
+arr[[4, 3, 0, 6]]
 ```
 
 # array的属性
@@ -140,7 +154,7 @@ b = np.arange(4)
 # b里面的值与3作比较[ True  True  True False]
 # b==3
 print(b<3)
-
+# 通过astype转换数据类型
 array1 = np.arange(4).reshape((2,2)).astype(np.float64)
 array2 = np.random.normal(2,1,(2,2))
 print(array1)
@@ -170,6 +184,7 @@ xx, yy = np.meshgrid(x,y)
 ---
 
 ```python
+# np.where三元表达式x if condition else y的矢量化版本
 # np.where(condition, x, y)
 # np.where(arr>0,2,-2)
 # 满足条件输出x，不满足条件输出y
@@ -184,6 +199,8 @@ a = np.array([2,4,6,8,10])
 print(np.where(a > 5)) # 返回(array([2, 3, 4]),)
 # 获得这些索引的值
 print(a[np.where(a>5)]) # 返回[ 6  8 10]
+# 用常数2替换arr中所有正的值
+np.where(arr > 0, 2, arr)
 
 # 检查数组中所有值是否均为TRUE np.all(array)
 # 测试数组中至少有一个TRUE np.any(array)
@@ -191,15 +208,17 @@ print(a[np.where(a>5)]) # 返回[ 6  8 10]
 
 # 排序
 array = np.array([2,1,3])
-# 按从小到大的顺序
+# 按从小到大的顺序，array本身没有改变
 b = np.sort(array)
-
+# 多维数组可以在任何一个轴向上进行排序，只需将轴编号传给sort即可
+arr.sort(1) # 是就地排序
 # 去重并排序
 b = np.unique(array)
 
 arr1 = np.array([2,1,5])
 arr2 = np.array([2,3,1,4])
 # 返回arr1 shape相同的array，对arr1的每一个元素判断是否在arr2中，如果在，则该位置为TRUE
+# 一个数组中的值在另一个数组中的成员资格，返回一个布尔型数组
 b = np.in1d(arr1,arr2) # [ True  True False]
 
 # 集合运算
@@ -235,6 +254,9 @@ b=np.insert(a,0,[[0,2]],axis=0)
 ## 常见数学运算
 
 ```python
+# 大小相等的数组之间的任何算术运算都会将运算应用到元素级
+# 数组与标量的算术运算会将标量值传播到各个元素
+# 大小相同的数组之间的比较会生成布尔值数组
 # 乘法
 # a*b表示矩阵每个对应的元素相乘
 # np.dot(a,b) 表示矩阵的乘法
@@ -253,13 +275,14 @@ import numpy as np
 a = np.arange(12).reshape((3,4))
 print(a)
 # 对整个array进行
+# 在这些方法中，布尔值会被强制转换为1和0
 # 求和
 print(np.sum(a))
 # 求最小值
 print(np.min(a))
 # 求最大值
 print(np.max(a))
-# 标准差
+# 标准差 自由度可调 默认为n
 np.std(a)
 # 方差
 np.var(a)
@@ -292,7 +315,7 @@ b = np.diff(a)
 b = np.nonzero(a) # 返回两个数组，第一个数组为横坐标位置，第二个数组为纵坐标的位置，第一个数组和第二个数组对应位置的数值组成的坐标表示非0数所在的位置
 # 排序,对每一行按从小到大的顺序排序
 b = np.sort(a)
-# 矩阵转置
+# 矩阵转置 它返回的是源数据的视图（不会进行任何复制操作）
 b = np.transpose(a)
 b = a.T
 # clip功能,对a里面的数处理，所有小于5的值都变为5，所有大于9的值都变为9
@@ -303,7 +326,7 @@ array = np.arange(4).reshape((2,2)).astype(np.float64)
 print(np.sqrt(array))
 # 求e的多少次方
 print(np.exp(array))
-# 可加一个参数表示原地操作，即改变array里面的值
+# 可以接受一个out可选参数,表示原地操作即改变array里面的值
 print(np.sqrt(array,array))
 # 还有运算如 abs log log10 log2
 # rint元素四舍五入
@@ -311,7 +334,19 @@ print(np.rint(array))
 print(array)
 ```
 
+![img](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/7178691-1d494e73b61c7ced.png)
+
+![img](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/7178691-2be79faf68ab6ff8.png)
+
+![img](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/7178691-4e38d02a66481530.png)
+
+![img](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/7178691-eff1e61e5464159f.png)
+
 ## 线性代数
+
+![img](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/7178691-dcdb66e49e5f70ea.png)
+
+numpy.linalg
 
 ```python
 a = np.array([[1, 2], [3, 4]])
@@ -409,7 +444,7 @@ ravel()：如果没有必要，不会产生源数据的副本
 flatten()：返回源数据的副本
 squeeze()：只能对维数为1的维度降维
 
-另外，reshape(-1)也可以“拉平”多维数组
+另外，reshape(-1)也可以“拉平”多维数组`b.reshape(-1)`
 
 ![这里写图片描述](https://img-blog.csdn.net/20180109095535985?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvdHltYXRsYWI=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
 
@@ -420,6 +455,8 @@ A = np.array([1,1,1])
 # 增加array的维度
 b = A[np.newaxis,:] # 把维度(3,)变成(1,3)
 b = A[:,np.newaxis] # 把维度(3,)变成(3,1)
+b=A.reshape((1,-1)) # 把维度(3,)变成(1,3)
+b=A.reshape((-1,1)) # 把维度(3,)变成(3,1)
 ```
 
 # 保存
