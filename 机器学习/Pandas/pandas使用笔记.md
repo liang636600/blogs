@@ -463,13 +463,161 @@ data[np.abs(data) > 3] = np.sign(data) * 3
 
 # 排列和随机采样
 
+```python
+# 对0-4的五个数字生成一个随机整数数组
+b = np.random.permutation(5)
+# 打乱dataframe的行的顺序，首先有一个permutation生成的随机整数数组
+df.take(b)
 
+# 随机采样sample方法，对行进行采样，每行元素不会被重复选择，下面表示选取三行
+df.sample(n=3)
+# 如果想每行元素可以被重复选择，传递参数replace=True即可
+```
+
+# 计算指标/哑变量
+
+将分类变量（categorical variable）转换为“哑变量”或“指标矩阵”
+
+如果DataFrame的某一列中含有k个不同的值，则可以派生出一个k列矩阵或DataFrame（其值全为1和0）
+
+```python
+df = pd.DataFrame({'key': ['b', 'b', 'a', 'c', 'a', 'b']})
+print(pd.get_dummies(df['key']))
+# get_dummies参数prefix可以在列名前加上前缀，例如下面列名a，b，c可以都有前缀
+   key
+0   b
+1   b
+2   a
+3   c
+4   a
+5   b
+   a  b  c
+0  0  1  0
+1  0  1  0
+2  1  0  0
+3  0  0  1
+4  1  0  0
+5  0  1  0
+```
+
+# 字符串操作
+
+```python
+# 子串定位
+'guido' in val
+val.index(',') # 如果找不到字符串index会抛出异常，而find不会
+val.find(':') # 返回-1表示不在其中
+
+# count可以返回指定子串出现的次数
+val.count(',')
+
+# replace用于替换字符串，如果替换后的字符串为空字符串，则表示删除
+val.replace(',', '::')
+```
+
+![img](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/7178691-087fe67bf6db0701.png)
+
+![img](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/7178691-d1f0d4ed3e895016.png)
+
+# 层次化索引（多级索引）
+
+```python
+data = pd.Series(np.random.randn(9),
+                 index=[['a', 'a', 'a', 'b', 'b', 'c', 'c', 'd', 'd'],
+                        [1, 2, 3, 1, 3, 1, 2, 2, 3]])
+a  1    2.161872
+   2    0.234322
+   3    0.819109
+b  1   -1.369456
+   3   -0.081444
+c  1    1.299434
+   2    1.160797
+d  2   -0.508928
+   3   -0.976582
+# 层次化索引 可以使用部分索引
+# 一级索引访问
+data['b']
+data.loc[['b', 'd']]
+
+# 访问二级索引，一级索引全选，二级索引中选为2的
+data.loc[:, 2]
+# 按行访问，访问数据集中的第一和第二行
+data[0:2]
+
+# series的多级索引 可以通过unstack方法变为一个dataframe，默认一级索引为行索引，二级索引为列索引，传入分层级别的编号或名称即可对其它级别进行unstack操作，例如result.unstack(0) result.unstack('state')
+# unstack的逆运算是stack
+# 默认情况下，unstack操作的是最内层（stack也是如此）
+data.unstack()
+
+# 把多级索引的某级索引变为列
+# 把class所在的索引变为列，如果不加level参数，则表示把原index变为列
+# 如果只是想去掉原index， df.reset_index(drop=True)
+df.reset_index(level='class')
+
+# 对于一个DataFrame，每条轴都可以有分层索引
+df = pd.DataFrame(np.arange(12).reshape((4, 3)),
+                     index=[['a', 'a', 'b', 'b'], [1, 2, 1, 2]],
+                     columns=[['Ohio', 'Ohio', 'Colorado'],
+                              ['Green', 'Red', 'Green']])
+     Ohio     Colorado
+    Green Red    Green
+a 1     0   1        2
+  2     3   4        5
+b 1     6   7        8
+  2     9  10       11
+# 各级索引都可以指定名字
+df.index.names = ['key1', 'key2']
+df.columns.names = ['state', 'color']
+
+# 根据列的一级索引访问
+df['Ohio']
+# 可以单独创建MultiIndex然后复用
+MultiIndex.from_arrays([['Ohio', 'Ohio', 'Colorado'], ['Green', 'Red', 'Green']],names=['state', 'color'])
+
+# 重排与分级排序
+# 需要重新调整某条轴上 各级索引的顺序
+# swaplevel接受两个级别编号或名称，并返回一个互换了级别的新对象（但数据不会发生变化）
+df.swaplevel('key1', 'key2')
+# sort_index则根据单个级别中的值对数据进行排序
+# swaplevel(0, 1)是对行的一级索引和二级索引排序
+# level的值默认取行的索引名
+df.swaplevel(0, 1).sort_index(level=0)
+
+# 根据级别汇总统计
+# 列不变，默认在行索引上操作，根据level的值选择是在几级索引上统计求和
+# 实际用的groupby功能
+df.sum(level='key2')
+# 在列索引上操作
+df.sum(level='color', axis=1)
+
+df = pd.DataFrame({'a': range(7), 'b': range(7, 0, -1),
+                      'c': ['one', 'one', 'one', 'two', 'two',
+                            'two', 'two'],
+                      'd': [0, 1, 2, 0, 1, 2, 3]})
+# set_index函数会将其一个或多个列转换为行索引，并创建一个新的DataFrame
+# 默认情况下，那些列会从DataFrame中移除，但也可以将其保留下来 df.set_index(['c', 'd'], drop=False)
+df.set_index(['c', 'd'])
+# reset_index的功能跟set_index刚好相反，层次化index会被转移到列里面
+df.reset_index()
+```
 
 # 合并DataFrame
+
+pandas.merge可根据一个或多个键将不同DataFrame中的行连接起来。SQL或其他关系型数据库的用户对此应该会比较熟悉，因为它实现的就是数据库的join操作。
+
+pandas.concat可以沿着一条轴将多个对象堆叠到一起。
+
+实例方法combine_first可以将重复数据拼接在一起，用一个对象中的值填充另一个对象中的缺失值。
 
 ```python
 import pandas as pd
 import numpy as np
+
+# 拼接多个series为一个series
+s1 = pd.Series([0, 1], index=['a', 'b'])
+s2 = pd.Series([2, 3, 4], index=['c', 'd', 'e'])
+s3 = pd.Series([5, 6], index=['f', 'g'])
+pd.concat([s1, s2, s3])
 
 df1 = pd.DataFrame(np.ones((3,4))*0,columns=['a','b','c','d'])
 df2 = pd.DataFrame(np.ones((3,4))*1,columns=['a','b','c','d'])
@@ -515,8 +663,12 @@ right = pd.DataFrame({'key': ['K0', 'K1', 'K2', 'K3'],
                       'D': ['D0', 'D1', 'D2', 'D3']})
 # print(left)
 # print(right)
-# 像join，两个df 列名为key所在的列的值，如果df1与df2相同，则合并
+# 像join，默认情况下merge做的是内连接，两个df 列名为key所在的列的值，如果df1与df2相同，则合并
+# 如果不指定on='key'，merge会将相同列名的列当做键
+# 在进行列－列连接时，DataFrame对象中的索引会被丢弃
 res = pd.merge(left, right, on='key')
+# 如果两个对象的列名不同，也可以分别进行指定
+pd.merge(df3, df4, left_on='lkey', right_on='rkey')
 
 left = pd.DataFrame({'key1': ['K0', 'K0', 'K1', 'K2'],
                      'key2': ['K0', 'K1', 'K0', 'K1'],
@@ -542,6 +694,8 @@ right = pd.DataFrame({'C': ['C0', 'C1', 'C2'],
 # print(right)
 # 按照index合并，两个df 如果df1与df2的index名相同，则合并
 res = pd.merge(left, right, left_index=True, right_index=True, how='outer')
+pd.merge(left1, right1, left_on='key', right_index=True)
+pd.merge(lefth, righth, left_on=['key1', 'key2'], right_index=True)
 
 # 重命名列名,如果df1与df2都有相同的列名但合并的时候没有用（on=‘’没有用），则用suffixes重新命名
 boys = pd.DataFrame({'k':['K0','K1','K2'],'age':[1,2,3]})
@@ -552,7 +706,135 @@ res = pd.merge(boys,girls,on='k',suffixes=['_boy','_girl'])
 print(res)
 ```
 
+# 数据聚合和分组运算
+
+对数据集进行分组并对各组应用一个函数（无论是聚合还是转换）
+
+![img](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/7178691-e5c671e09ecf94be.png)
+
+```python
+df = pd.DataFrame({'key1': ['a', 'a', 'b', 'b', 'a'],
+                   'key2': ['one', 'two', 'one', 'two', 'one'],
+                   'data1': np.random.randn(5),
+                   'data2': np.random.randn(5)})
+print(df)
+# 按key1进行分组 然后计算data1列的平均值
+df['data1'].groupby(df['key1']).mean()
+# 按key1，key2进行分组 然后计算data1列的平均值
+df['data1'].groupby([df['key1'], df['key2']]).mean()
+
+# 将列名用作分组键
+df.groupby('key1').mean()
+df.groupby(['key1', 'key2']).mean()
+
+# GroupBy的size方法，它可以返回一个含有分组大小的Series
+df.groupby(['key1', 'key2']).size()
+# key1  key2
+# a     one     2
+#       two     1
+# b     one     1
+#       two     1
+
+# 对分组进行迭代，GroupBy对象支持迭代，可以产生一组二元元组（由分组名和数据块组成）
+for name, group in df.groupby('key1'):
+    print(name)
+    print(group)
+
+# 对于多重键的情况，元组的第一个元素将会是由键值组成的元组
+for (k1, k2), group in df.groupby(['key1', 'key2']):
+    print((k1, k2))
+    print(group)
+# 把分组做成 name:数据块 字典
+pieces = dict(list(df.groupby('key1')))
+
+# 选取一列或列的子集
+df.groupby('key1')['data1']
+df.groupby('key1')[['data2']]
+# 下面等价
+df['data1'].groupby(df['key1'])
+df[['data2']].groupby(df['key1'])
+```
+
+```python
+# 通过字典或series进行分组（自定义分组规则，比如把某几列分为一组）
+people = pd.DataFrame(np.random.randn(5, 5),
+                      columns=['a', 'b', 'c', 'd', 'e'],
+                      index=['Joe', 'Steve', 'Wes', 'Jim', 'Travis'])
+people.iloc[2:3, [1, 2]] = np.nan  # Add a few NA values
+print(people)
+# 假设已知列的分组关系，并希望根据分组计算列的和
+mapping = {'a': 'red', 'b': 'red', 'c': 'blue',
+           'd': 'blue', 'e': 'red', 'f': 'orange'}
+# 这里的mapping也可以改为series
+map_series = pd.Series(mapping)
+people.groupby(mapping, axis=1).sum()
+
+# 通过函数分组
+# 该函数应用在各个索引值上，其返回值就会被用作分组名称
+people.groupby(len).sum()
+
+# 根据索引级别(多级索引)分组
+columns = pd.MultiIndex.from_arrays([['US', 'US', 'US', 'JP', 'JP'],
+                                     [1, 3, 5, 1, 3]],
+                                    names=['cty', 'tenor'])
+hier_df = pd.DataFrame(np.random.randn(4, 5), columns=columns)
+print(hier_df)
+# 要根据级别分组，使用level关键字传递级别序号或名字
+hier_df.groupby(level='cty', axis=1).count()
+```
+
+## 数据聚合
+
+![img](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/7178691-ba8de524e08b1b6f.png)
+
+```python
+# 在分组中使用自己的聚合函数
+def peak_to_peak(arr):
+    return arr.max() - arr.min()
+
+df = pd.DataFrame({'key1': ['a', 'a', 'b', 'b', 'a'],
+                   'key2': ['one', 'two', 'one', 'two', 'one'],
+                   'data1': np.array([1,2,3,4,5]),
+                   'data2': np.array([6,7,8,9,10])})
+print(df)
+# 对各列执行peak_to_peak函数
+df.groupby('key1').agg(peak_to_peak)
+
+df = pd.DataFrame({'key1': ['a', 'a', 'b', 'b', 'a'],
+                   'key2': ['one', 'two', 'one', 'two', 'one'],
+                   'data1': np.array([1,2,3,4,5]),
+                   'data2': np.array([6,7,8,9,10])})
+print(df)
+# 每一列一次应用多个函数
+# 传入一组函数或函数名，DataFrame的每一列就会以相应的函数命名（生成二级索引）
+df.groupby('key1').agg(['mean', 'sum'])
+# 对聚合后的列名重命名，对mean重命名为foo，对sum重命名为bar
+df.groupby('key1').agg([('foo', 'mean'), ('bar', 'sum')])
+
+# 对不同的列应用不同的函数。向agg传入一个从列名映射到函数的字典
+# data1所在的列应用max函数，data2所在的列应用sum函数
+df.groupby('key1').agg({'data1' : np.max, 'data2' : 'sum'})
+df.groupby('key1').agg({'data1' : ['min', 'max'],'data2' : 'sum'})
+
+# 返回某列最大的两个值所在的行
+def top(df, n=2, column='data1'):
+    return df.sort_values(by=column)[-n:]
+
+df = pd.DataFrame({'key1': ['a', 'a', 'b', 'b', 'a'],
+                   'key2': ['one', 'two', 'one', 'two', 'one'],
+                   'data1': np.array([1, 4, 3, 2, 5]),
+                   'data2': np.array([6, 10, 8, 9, 7])})
+print(df)
+# 对分组后的每组都找到最大的两行
+df.groupby('key1').apply(top)
+# 如果不想构成层次化索引 在groupby的参数中加上group_keys=False，这样groupby的key还是一列
+```
+
 # plot
+
+![img](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/7178691-6d9fbf863c09370a.png)
+
+![img](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/7178691-44e50562aeb5eb49.png)
 
 ````python
 import pandas as pd
@@ -561,7 +843,8 @@ import matplotlib.pyplot as plt
 # Series
 data = pd.Series(np.random.randn(1000),index=np.arange(1000))
 data = data.cumsum()
-# 展示数据 series
+# 展示数据 series，默认为线型图
+# Series对象的索引会被传给matplotlib，并用以绘制X轴。可以通过use_index=False禁用该功能
 data.plot()
 
 # dataframe
@@ -571,6 +854,19 @@ data = pd.DataFrame(np.random.randn(1000,4),
                     columns=list('ABCD'))
 data = data.cumsum()
 data.plot()
+
+# 柱状图 plot.bar()和plot.barh()分别绘制水平和垂直的柱状图
+# 柱状图有一个非常不错的用法：利用value_counts图形化显示Series中各值的出现频率，比如s.value_counts().plot.bar()
+fig, axes = plt.subplots(2, 1)
+data = pd.Series(np.random.rand(16), index=list('abcdefghijklmnop'))
+data.plot.bar(ax=axes[0], color='k', alpha=0.7)
+data.plot.barh(ax=axes[1], color='k', alpha=0.7)
+# 对于DataFrame，柱状图会将每一行的值分为一组，并排显示
+df = pd.DataFrame(np.random.rand(6, 4),
+                  index=['one', 'two', 'three', 'four', 'five', 'six'],
+                  columns=pd.Index(['A', 'B', 'C', 'D'], name='Genus'))
+df.plot.bar()
+
 # 散点图
 # x='A'表示x的数据为列名A对应的数据，y=‘B’表示y的数据为列名B对应而数据
 ax = data.plot.scatter(x='A',y='B',color='b',label='Class 1')
