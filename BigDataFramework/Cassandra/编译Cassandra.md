@@ -92,6 +92,10 @@ BUILD FAILED
 
   ![image-20220626111242738](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20220626111242738.png)
 
+## JDK版本换为14编译
+
+
+
 # 4 启动运行与退出运行
 
 进入Cassandra主目录下的bin文件夹，然后输入`./cassandra -R`

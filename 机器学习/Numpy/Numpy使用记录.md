@@ -444,7 +444,7 @@ ravel()：如果没有必要，不会产生源数据的副本
 flatten()：返回源数据的副本
 squeeze()：只能对维数为1的维度降维
 
-另外，reshape(-1)也可以“拉平”多维数组`b.reshape(-1)`
+另外，reshape(-1)也可以“拉平”多维数组`b.reshape(-1)`，-1表示该维度的大小由数据本身推断而来
 
 ![这里写图片描述](https://img-blog.csdn.net/20180109095535985?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvdHltYXRsYWI=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
 
