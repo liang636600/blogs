@@ -34,6 +34,55 @@ bin/ycsb.sh run basic -P workloads/workloada
 
 ![image-20220627100138759](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20220627100138759.png)
 
-* 尝试JDK16运行
+* 尝试JDK11编译Cassandra JDK16运行
 
   ![image-20220627100431244](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20220627100431244.png)
+
+* 尝试JDK14编译Cassandra然后jdk16运行
+
+  在jdk16环境中执行命令`./cassandra -R`报错
+
+  ```
+  Exception (java.lang.AssertionError) encountered during startup: java.lang.reflect.InaccessibleObjectException: Unable to make field private int java.io.FileDescriptor.fd accessible: module java.base does not "opens java.io" to unnamed module @32b260fa
+  java.lang.AssertionError: java.lang.reflect.InaccessibleObjectException: Unable to make field private int java.io.FileDescriptor.fd accessible: module java.base does not "opens java.io" to unnamed module @32b260fa
+  	at org.apache.cassandra.utils.FBUtilities.getProtectedField(FBUtilities.java:672)
+  	at org.apache.cassandra.utils.NativeLibrary.<clinit>(NativeLibrary.java:81)
+  	at org.apache.cassandra.service.CassandraDaemon.setup(CassandraDaemon.java:198)
+  	at org.apache.cassandra.service.CassandraDaemon.activate(CassandraDaemon.java:620)
+  	at org.apache.cassandra.service.CassandraDaemon.main(CassandraDaemon.java:732)
+  Caused by: java.lang.reflect.InaccessibleObjectException: Unable to make field private int java.io.FileDescriptor.fd accessible: module java.base does not "opens java.io" to unnamed module @32b260fa
+  	at java.base/java.lang.reflect.AccessibleObject.checkCanSetAccessible(AccessibleObject.java:357)
+  	at java.base/java.lang.reflect.AccessibleObject.checkCanSetAccessible(AccessibleObject.java:297)
+  	at java.base/java.lang.reflect.Field.checkCanSetAccessible(Field.java:177)
+  	at java.base/java.lang.reflect.Field.setAccessible(Field.java:171)
+  	at org.apache.cassandra.utils.FBUtilities.getProtectedField(FBUtilities.java:667)
+  	... 4 more
+  ERROR [main] 2022-07-03 01:21:48,848 CassandraDaemon.java:754 - Exception encountered during startup
+  java.lang.AssertionError: java.lang.reflect.InaccessibleObjectException: Unable to make field private int java.io.FileDescriptor.fd accessible: module java.base does not "opens java.io" to unnamed module @32b260fa
+  	at org.apache.cassandra.utils.FBUtilities.getProtectedField(FBUtilities.java:672)
+  	at org.apache.cassandra.utils.NativeLibrary.<clinit>(NativeLibrary.java:81)
+  	at org.apache.cassandra.service.CassandraDaemon.setup(CassandraDaemon.java:198)
+  	at org.apache.cassandra.service.CassandraDaemon.activate(CassandraDaemon.java:620)
+  	at org.apache.cassandra.service.CassandraDaemon.main(CassandraDaemon.java:732)
+  Caused by: java.lang.reflect.InaccessibleObjectException: Unable to make field private int java.io.FileDescriptor.fd accessible: module java.base does not "opens java.io" to unnamed module @32b260fa
+  	at java.base/java.lang.reflect.AccessibleObject.checkCanSetAccessible(AccessibleObject.java:357)
+  	at java.base/java.lang.reflect.AccessibleObject.checkCanSetAccessible(AccessibleObject.java:297)
+  	at java.base/java.lang.reflect.Field.checkCanSetAccessible(Field.java:177)
+  	at java.base/java.lang.reflect.Field.setAccessible(Field.java:171)
+  	at org.apache.cassandra.utils.FBUtilities.getProtectedField(FBUtilities.java:667)
+  	... 4 common frames omitted
+  ```
+
+  * 解决：尝试在`cassandra-env.sh`文件末尾添加JVM_OPTS参数
+
+    ````
+    JVM_OPTS="$JVM_OPTS --illegal-access=permit --add-exports=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED"
+    ````
+
+  成功运行
+
+  ![image-20220703165317622](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20220703165317622.png)
+
+  ![image-20220703165347637](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20220703165347637.png)
+
+  

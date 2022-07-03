@@ -94,7 +94,11 @@ BUILD FAILED
 
 ## JDK版本换为14编译
 
+下载jdk14`https://jdk.java.net/archive/`
 
+在Cassandra主目录的命令行输入`ant -Duse.jdk11=true`
+
+![image-20220703111917090](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20220703111917090.png)
 
 # 4 启动运行与退出运行
 
@@ -123,6 +127,24 @@ sudo kill pid
 ```
 
 这里pid替换成实际的pid即可
+
+## JDK14运行
+
+报错
+
+![image-20220703131634888](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20220703131634888.png)
+
+````
+OpenJDK 64-Bit Server VM warning: Ignoring option UseConcMarkSweepGC; support was removed in 14.0
+OpenJDK 64-Bit Server VM warning: Ignoring option CMSParallelRemarkEnabled; support was removed in 14.0
+OpenJDK 64-Bit Server VM warning: Ignoring option CMSInitiatingOccupancyFraction; support was removed in 14.0
+OpenJDK 64-Bit Server VM warning: Ignoring option UseCMSInitiatingOccupancyOnly; support was removed in 14.0
+Unrecognized VM option 'CMSWaitDuration=10000'
+Error: Could not create the Java Virtual Machine.
+Error: A fatal exception has occurred. Program will exit.
+````
+
+* 解决：尝试修改Cassandra的conf文件中的`jvm11-server.options`中使用G1垃圾回收器
 
 # 5 CQHSH
 
