@@ -76,7 +76,7 @@ bin/ycsb.sh run basic -P workloads/workloada
   * 解决：尝试在`cassandra-env.sh`文件末尾添加JVM_OPTS参数
 
     ````
-    JVM_OPTS="$JVM_OPTS --illegal-access=permit --add-exports=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-exports=jdk.unsupported/sun.misc=ALL-UNNAMED"
+    JVM_OPTS="$JVM_OPTS --illegal-access=permit"
     ````
 
   成功运行
