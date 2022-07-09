@@ -85,4 +85,33 @@ bin/ycsb.sh run basic -P workloads/workloada
 
   ![image-20220703165347637](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20220703165347637.png)
 
+
+---
+
+Cassandra的heap size在`cassandra-env.sh`中设置（与JVM相关的参数都可以在该文件中设置）
+
+* 修改workload的recordcount
+
+  * 方法1：
+
+    创建一个文件large.dat里面一行内容recordcount=100000000
+
+    ```
+    ./bin/ycsb load basic -P workloads/workloada -P large.dat
+    ```
+
+  * 方法2：
+
+    ```
+    ./bin/ycsb load basic -P workloads/workloada -p recordcount=100000000
+    ```
+
+* 保存状态到文件中去
+
+  ```
+  ./bin/ycsb load basic -P workloads/workloada -P large.dat -s > load.dat
+  ```
+
   
+
+
