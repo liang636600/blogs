@@ -112,6 +112,32 @@ Cassandra的heap size在`cassandra-env.sh`中设置（与JVM相关的参数都�
   ./bin/ycsb load basic -P workloads/workloada -P large.dat -s > load.dat
   ```
 
-  
+* 修改GC的种类
 
+  修改在conf文件夹下的jvm11-server.options中的GC种类`-XX:UseZGC`
+
+  可以在Cassandra启动的时候看到如下信息，说明更改GC成功
+
+  ![image-20220710201914166](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20220710201914166.png)
+
+* 修改heap-size的大小
+
+  修改conf文件夹下的cassandra-env.sh文件，MAX_HEAP_SIZE是分给java heap总的内存空间，HEAP_NEWSIZE是分给young generation的内存空间，两个参数要么一起设置，要么不设置
+
+  ```
+  The main trade-off for the young generation is that the larger it is,the longer GC pause times will be.The shorter it is,the more expensive GC will be (usually).
+  The example HEAP_NEWSIZE assumes a modern 8-core+machine for decent pause times.If in doubt,and if you do not particularly want to tweak,go with 100 MB per phystcal CPU core.
+  ```
+
+  HEAP_NEWSIZE取(CPU核数的100倍，¼ of MAX_HEAP_SIZE)两个值中的较小值
+
+  Cassandra默认的heap-size的大小应该是7.750GB，如下图所示
+
+  ![image-20220710205727129](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20220710205727129.png)
+
+  * 尝试修改参数`MAX_HEAP_SIZE="4G"`与`HEAP_NEWSIZE="1200M"`
+
+    如下图所示，参数修改成功
+
+    ![image-20220710211502457](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20220710211502457.png)
 

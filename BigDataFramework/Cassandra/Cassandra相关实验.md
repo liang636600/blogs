@@ -49,14 +49,22 @@ Cassandra使用的是jdk14编译后的版本，运行时jdk使用的jdk16版本
 
 * 运行
 
-  命令`bin/ycsb.sh run cassandra-cql -p "hosts=127.0.0.1" -P workloads/workloada -p recordcount=3000`
+  命令`bin/ycsb.sh run cassandra-cql -p "hosts=127.0.0.1" -P workloads/workloada -p recordcount=3000 -p operationcount=1000`
 
-  | recordcount | time/s |
-  | ----------- | ------ |
-  | 300000      | 3      |
-  | 20000       | 3.047  |
-  | 600000      | 3.055  |
-  | 6000000     | 3.637  |
+  参数operationcount决定运算次数
 
-  
+---
+
+# 测试方案
+
+| GC         | workload种类 | workload的recordcount | workload的operationcount | MAX_HEAP_SIZE |
+| ---------- | ------------ | --------------------- | ------------------------ | ------------- |
+| ZGC        | workloada    | 6,000,000             | 6,000,000                | 4G            |
+| G1         | workloadb    | 12,000,000            | 12,000,000               | 8G            |
+| Shenandoah | workloadc    | 24,000,000            | 24,000,000               | 16G           |
+| parallel   | workloadd    |                       |                          |               |
+|            | workloade    |                       |                          |               |
+|            | workloadf    |                       |                          |               |
+
+测试时，手动调整GC种类与MAX_HEAP_SIZE两个参数，中间的参数全连接组合
 
