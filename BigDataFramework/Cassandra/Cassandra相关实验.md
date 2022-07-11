@@ -38,6 +38,10 @@ Cassandra使用的是jdk14编译后的版本，运行时jdk使用的jdk16版本
     # can be identified. Set this value to zero to disable slow query logging.
     slow_query_log_timeout_in_ms: 5000
     ```
+    
+    然后出现错误`OperationTimedOut:errors={'127.0.0.1':'Client request timeout.See Session.execute[_async](timeout)'},last_host=127.0.0.1`
+    
+    * 解决：修改cqlsh.py文件的参数DEFAULT_REQUEST_TIME为更大的值
 
   | recordcount | time/s  | 数据库中的行数 |
   | ----------- | ------- | -------------- |
@@ -66,5 +70,16 @@ Cassandra使用的是jdk14编译后的版本，运行时jdk使用的jdk16版本
 |            | workloade    |                       |                          |               |
 |            | workloadf    |                       |                          |               |
 
-测试时，手动调整GC种类与MAX_HEAP_SIZE两个参数，中间的参数全连接组合
+| GC   | MAX_HEAP_SIZE | Cassandra数据库中总条数 |      | workload的recordcount | workload的operationcount | 总体用时/s |
+| ---- | ------------- | ----------------------- | ---- | --------------------- | ------------------------ | ---------- |
+| ZGC  | 4G            | 600,000                 | load | 500,000               | 100,000                  | 68.548     |
+| ZGC  | 4G            | 600,000                 | run  | 500,000               | 100,000                  | 17.268     |
+|      |               |                         | load | 50,000                | 600,000                  | 9.931      |
+|      |               |                         | run  | 50,000                | 600,000                  | 74.456     |
+|      |               | 1,200,000               | load | 500,000               | 100,000                  | 68.686     |
+|      |               |                         | run  | 500,000               | 100,000                  | 17.743     |
+|      |               |                         | load | 50,000                | 600,000                  | 10.038     |
+|      |               |                         | run  | 50,000                | 600,000                  | 68.819     |
+
+
 
