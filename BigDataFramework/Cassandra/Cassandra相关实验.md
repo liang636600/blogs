@@ -61,25 +61,37 @@ Cassandra使用的是jdk14编译后的版本，运行时jdk使用的jdk16版本
 
 # 测试方案
 
-| GC         | workload种类 | workload的recordcount | workload的operationcount | MAX_HEAP_SIZE |
-| ---------- | ------------ | --------------------- | ------------------------ | ------------- |
-| ZGC        | workloada    | 6,000,000             | 6,000,000                | 4G            |
-| G1         | workloadb    | 12,000,000            | 12,000,000               | 8G            |
-| Shenandoah | workloadc    | 24,000,000            | 24,000,000               | 16G           |
-| parallel   | workloadd    |                       |                          |               |
-|            | workloade    |                       |                          |               |
-|            | workloadf    |                       |                          |               |
+| GC         | MAX_HEAP_SIZE | workload种类 | workload的recordcount | workload的operationcount |
+| ---------- | ------------- | ------------ | --------------------- | ------------------------ |
+| ZGC        | 4G            | workloada    | 6,000,000             | 6,000,000                |
+| G1         | 8G            | workloadb    | 12,000,000            | 12,000,000               |
+| Shenandoah | 16G           | workloadc    | 24,000,000            | 24,000,000               |
+| parallel   |               | workloadd    |                       |                          |
+|            |               | workloade    |                       |                          |
+|            |               | workloadf    |                       |                          |
+
+-XX:+UseShenandoahGC
+
+-XX:+UseParallelGC
+
+* load和run的时间不受Cassandra数据库中原来就有数据条数的影响
 
 | GC   | MAX_HEAP_SIZE | Cassandra数据库中总条数 |      | workload的recordcount | workload的operationcount | 总体用时/s |
 | ---- | ------------- | ----------------------- | ---- | --------------------- | ------------------------ | ---------- |
 | ZGC  | 4G            | 600,000                 | load | 500,000               | 100,000                  | 68.548     |
-| ZGC  | 4G            | 600,000                 | run  | 500,000               | 100,000                  | 17.268     |
+|      |               |                         | run  | 500,000               | 100,000                  | 17.268     |
 |      |               |                         | load | 50,000                | 600,000                  | 9.931      |
 |      |               |                         | run  | 50,000                | 600,000                  | 74.456     |
 |      |               | 1,200,000               | load | 500,000               | 100,000                  | 68.686     |
 |      |               |                         | run  | 500,000               | 100,000                  | 17.743     |
 |      |               |                         | load | 50,000                | 600,000                  | 10.038     |
 |      |               |                         | run  | 50,000                | 600,000                  | 68.819     |
+|      |               | 4,800,000               | load | 500,000               | 100,000                  | 70.392     |
+|      |               |                         | run  | 500,000               | 100,000                  | 16.332     |
+|      |               |                         | load | 50,000                | 600,000                  | 10.074     |
+|      |               |                         | run  | 50,000                | 600,000                  | 71.246     |
+|      |               |                         | load | 50,000                | 300,000                  | 10.211     |
+|      |               |                         | run  | 50,000                | 300,000                  | 36.139     |
 
 
 
