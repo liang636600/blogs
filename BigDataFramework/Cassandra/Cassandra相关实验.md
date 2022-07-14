@@ -61,11 +61,13 @@ Cassandra使用的是jdk14编译后的版本，运行时jdk使用的jdk16版本
 
 # 测试方案
 
+先往Cassandra数据库中load 500万条数据，然后测试设置如下
+
 | GC         | MAX_HEAP_SIZE | workload种类 | workload的recordcount | workload的operationcount |
 | ---------- | ------------- | ------------ | --------------------- | ------------------------ |
-| ZGC        | 4G            | workloada    | 6,000,000             | 6,000,000                |
-| G1         | 8G            | workloadb    | 12,000,000            | 12,000,000               |
-| Shenandoah | 16G           | workloadc    | 24,000,000            | 24,000,000               |
+| ZGC        | 8G            | workloada    | 1,000                 | 6,000,000                |
+| G1         |               | workloadb    |                       | 12,000,000               |
+| Shenandoah |               | workloadc    |                       | 24,000,000               |
 | parallel   |               | workloadd    |                       |                          |
 |            |               | workloade    |                       |                          |
 |            |               | workloadf    |                       |                          |
