@@ -63,20 +63,31 @@ Cassandra使用的是jdk14编译后的版本，运行时jdk使用的jdk16版本
 
 先往Cassandra数据库中load 500万条数据，然后测试设置如下
 
-| GC         | MAX_HEAP_SIZE | workload种类 | workload的recordcount | workload的operationcount |
-| ---------- | ------------- | ------------ | --------------------- | ------------------------ |
-| ZGC        | 8G            | workloada    | 1,000                 | 6,000,000                |
-| G1         |               | workloadb    |                       | 12,000,000               |
-| Shenandoah |               | workloadc    |                       | 24,000,000               |
-| parallel   |               | workloadd    |                       |                          |
-|            |               | workloade    |                       |                          |
-|            |               | workloadf    |                       |                          |
+| GC       | MAX_HEAP_SIZE | workload种类 | workload的recordcount | workload的operationcount |
+| -------- | ------------- | ------------ | --------------------- | ------------------------ |
+| ZGC      | 8G            | workloada    | 1,000                 | 6,000,000                |
+| G1       |               | workloadb    |                       | 24,000,000               |
+| parallel |               | workloadc    |                       |                          |
+|          |               | workloadd    |                       |                          |
+|          |               | workloadf    |                       |                          |
+
+| GC       | MAX_HEAP_SIZE | workload种类 | workload的recordcount | workload的operationcount |
+| -------- | ------------- | ------------ | --------------------- | ------------------------ |
+| ZGC      | 8G            | workloade    | 1,000                 | 50,000                   |
+| G1       |               |              |                       | 200,000                  |
+| parallel |               |              |                       |                          |
+|          |               |              |                       |                          |
+|          |               |              |                       |                          |
 
 -XX:+UseShenandoahGC
 
 -XX:+UseParallelGC
 
 * load和run的时间不受Cassandra数据库中原来就有数据条数的影响
+
+* run的时间会收到load的数量的影响
+
+  ![image-20220714154031092](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20220714154031092.png)
 
 | GC   | MAX_HEAP_SIZE | Cassandra数据库中总条数 |      | workload的recordcount | workload的operationcount | 总体用时/s |
 | ---- | ------------- | ----------------------- | ---- | --------------------- | ------------------------ | ---------- |
@@ -94,6 +105,10 @@ Cassandra使用的是jdk14编译后的版本，运行时jdk使用的jdk16版本
 |      |               |                         | run  | 50,000                | 600,000                  | 71.246     |
 |      |               |                         | load | 50,000                | 300,000                  | 10.211     |
 |      |               |                         | run  | 50,000                | 300,000                  | 36.139     |
+|      |               |                         | run  | 1,000,000             | 6,000,000                | 776.581    |
+|      |               |                         | run  | 1,000                 | 6,000,000                | 657.073    |
+| G1   | 8G            | 4,800,000               | run  | 1,000,000             | 6,000,000                | 765.056    |
+|      |               |                         | run  | 1,000                 | 6,000,000                | 668.420    |
 
 
 
