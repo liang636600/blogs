@@ -165,12 +165,12 @@ Failed to execute goal on project flink-hadoop-fs: Could not resolve dependencie
 * 尝试在主目录的pom文件中添加
 
   	<dependency>
-  			<groupId>jdk.tools</groupId>
-  			<artifactId>jdk.tools</artifactId>
-  			<version>1.7</version>
-  			<scope>system</scope>
-  			<systemPath>${JAVA_HOME}/lib/tools.jar</systemPath>
-  	</dependency>
+    			<groupId>jdk.tools</groupId>
+    			<artifactId>jdk.tools</artifactId>
+    			<version>1.7</version>
+    			<scope>system</scope>
+    			<systemPath>${JAVA_HOME}/lib/tools.jar</systemPath>
+    	</dependency>
   失败，目前发现是自己的jdk的lib下没有tools.jar，据说jdk8过后移出了，尝试将jdk8的tools.jar文件移到jdk16中去，成功
 
 ---
