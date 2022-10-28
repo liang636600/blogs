@@ -10,7 +10,7 @@
 
 在hbase源码的主目录下，运行命令`mvn package -DskipTests`
 
-* 报错：Failed to execute goal org.apache.maven.plugins:maven-enforcer-plugin:3.0.0-M3:enforce (hadoop3-profile-required) on project hbase: Some Enforcer rules have failed. Look above for specific messages explaining why the rule failed. -> [Help 1]
+* 报错1：Failed to execute goal org.apache.maven.plugins:maven-enforcer-plugin:3.0.0-M3:enforce (hadoop3-profile-required) on project hbase: Some Enforcer rules have failed. Look above for specific messages explaining why the rule failed. -> [Help 1]
 
   ![image-20221025201622214](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20221025201622214.png)
 
@@ -56,4 +56,65 @@
 
 `create 'test', 'cf'`
 
-`list 'test'`
+* 报错1：ERROR: KeeperErrorCode = ConnectionLoss for /hbase/master
+
+  该错误与是否自己编译hbase 还是 用官方提供的bin 无关
+
+  尝试了jdk11，也是同样的错
+
+  打开log日志，里面出现的是不一样的错误
+
+  ```
+  regionserver.HRegionServer: Failed construction RegionServer
+  java.lang.NumberFormatException: For input string: "30s"
+  ```
+
+  * 尝试1：注释掉hadoop文件夹下`hdfs-site.xml`中的30s所在的property两处 以及`core-site.xml`中的30s一处
+
+    * 报错1.1
+
+      ```
+      ERROR master.HMaster: Failed to become active master
+      java.net.ConnectException: Call From iscas-Precision-3551/127.0.1.1 to iscas-Precision-3551:9001 failed on connection exception: java.net.ConnectException: Connection refused; For more details see:  http://wiki.apache.org/hadoop/ConnectionRefused
+      ```
+
+      * 未解决：尝试1 for 报错1.1：
+
+        ![image-20221028213222969](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20221028213222969.png)
+
+        我的hbase下的`hbase-site.xml`中没有property `hbase.rootdir`，在该文件中添加一个property
+
+      * 解决：尝试2 for 报错1.1：
+
+        在启动hbase之前，在hadoop的sbin文件夹下启动`./start-all.sh`
+
+先启动hadoop后可以解决报错1
+
+* 报错2：`ERROR: org.apache.hadoop.hbase.ipc.ServerNotRunningYetException: Server is not running yet`
+
+  * **解决：**尝试1 for 报错2：修改`hbase-site.xml`文件
+
+    ```
+    <property>
+      <name>hbase.wal.provider</name>
+      <value>filesystem</value>
+    </property>
+    ```
+
+成功解决报错
+
+插入数据
+
+```
+put 'test', 'row1', 'cf:a', 'value1'
+put 'test', 'row2', 'cf:b', 'value2'
+put 'test', 'row3', 'cf:c', 'value3'
+```
+
+查看表
+
+`scan 'test'`
+
+获得一行数据
+
+`get 'test', 'row1'`
