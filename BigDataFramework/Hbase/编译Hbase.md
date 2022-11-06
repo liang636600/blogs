@@ -86,7 +86,7 @@
 
       * 解决：尝试2 for 报错1.1：
 
-        在启动hbase之前，在hadoop的sbin文件夹下启动`./start-all.sh`
+        在启动hbase之前，在hadoop的sbin文件夹下启动`./start-all.sh`（一定要主要hadoop和hbase版本之间的匹配问题，不然可能报方法找不到的错误）
 
 先启动hadoop后可以解决报错1
 
