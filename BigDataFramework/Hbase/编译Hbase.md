@@ -46,6 +46,40 @@
 
 ![image-20221025211257981](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20221025211257981.png)
 
+## jdk16编译hbase2.3.0源码
+
+编译成功
+
+![image-20221108144708829](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20221108144708829.png)
+
+### jdk8运行
+
+* 报错`ERROR master.HMaster: Failed to become active master
+  java.lang.IncompatibleClassChangeError: Found interface org.apache.hadoop.hdfs.protocol.HdfsFileStatus, but class was expected`
+
+### jdk16运行
+
+* 报错与jdk8一样`ERROR master.HMaster: Failed to become active master
+  java.lang.IncompatibleClassChangeError: Found interface org.apache.hadoop.hdfs.protocol.HdfsFileStatus, but class was expected`
+
+  * 尝试1：修改`hbase-2.2.4/dev-support/hbase-personality.sh`文件中` hbase_hadoop3_versions`为对应的版本
+
+    ![image-20221108151748169](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20221108151748169.png)
+
+    修改`hbase-2.2.4/pom.xml`文件中`<hadoop-three.version>`为系统的hadoop版本
+
+    ![image-20221108152311388](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20221108152311388.png)
+
+    重新在jdk16环境下编译`mvn clean package -DskipTests -Denforcer.skip=true -Dhadoop.profile=3.0 -Dhadoop-three.version=3.3.1`
+
+    ![image-20221108153741872](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20221108153741872.png)
+
+    在运行hbase shell的时候terminal界面报了`error,connection closed`，但打开日志里面，最开始没有error的信息，然后出现master exit的信息
+
+## jdk8编译hbase2.3.0源码
+
+
+
 # 3 简单测试
 
 先运行`start-hbase.sh`
