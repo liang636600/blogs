@@ -9,3 +9,23 @@
 还需要注意的是如果要使用clion调试jdk的话，不要随意移动位置
 
 ![image-20221105213446499](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20221105213446499.png)
+
+# 命令行java调试
+
+如图，配置Run/Debug Configurations如下
+
+![image-20230312154744800](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20230312154744800.png)
+
+# 问题
+
+## 1 debug时碰到optimized out，看不到变量值
+
+![image-20230312171446633](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20230312171446633.png)
+
+* 尝试1？
+
+  使用c++的话，CMakeLists增加：
+
+  ```cpp
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+  ```
