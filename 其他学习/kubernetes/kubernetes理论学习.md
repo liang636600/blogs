@@ -22,10 +22,16 @@ Pod是若干容器的组合，一个Pod内的容器必须运行在同一台宿�
 Pod有两种类型:静态Pod和普通Pod。
 
 * 静态Pod并不存在于etcd存储中，而是存放在某个node的具体文件中，且只能在此node上启动。
-
 * 普通Pod一但被创建，就会被放入到etcd存储中，随后会被master调度到某个具体的node上进行绑定，该Pod被对应的node上的kubelet进程实例化为一组相关的Docker容器并启动，一个Pod中的应用容器共享一组资源
 
+<img src="https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20230326195955718.png" alt="image-20230326195955718" style="zoom:67%;" />
+
+![image-20230326200052625](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20230326200052625.png)
+
+![image-20230326200202218](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20230326200202218.png)
+
 ## replication controller
+
 当应用托管在kubernetes后，replication controller负责保证应用持续运行。RC用于管理Pod的副本，保证集群中存在指定数量的Pod副本。当集群中副本的数量大于指定数量时，会终止指定数量之外的多余容器，反之，会启动少于指定数量的容器，以保证数量不变
 ## Service
 Service是真实应用服务的抽象，定义了Pod的逻辑上的集合和访问Pod集合的策略。Service将代理Pod对外表现为一个单一的访问接口，外部不需要了解Pod如何运行
@@ -36,7 +42,75 @@ Volume是Pod中能够被多个容器访问的共享目录。Volume被定义在Po
 ![IMG_20211217_113027](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/IMG_20211217_113027.jpg)
 
 # kubernetes的操作流程
-1. 通过kubectl和kubernetes API，提交一个创建RC的请求，该请求通过API Server被写入到etcd中。该RC请求包含一个Pod模板和一个希望得副本数。
+1. 通过kubectl和kubernetes API，提交一个创建RC的请求，该请求通过API Server被写入到etcd中。该RC请求包含一个Pod模板和一个希望的副本数。
 2. controller manager通过API Server监听资源变化的接口监听到该RC请求，如果当前集群中没有其所对应的Pod实例，则根据RC中的Pod模板定义生成一个Pod对象，并通过API Server写入etcd
 3. Scheduler通过查看集群的当前状态（有那些可用节点及各节点有哪些可用资源）执行相应的调度流程，将新的pod绑定到指定节点上，并通过API Server将该结果写入到etcd
 4. 该节点上的kubelet会监测分配给其所在节点的Pod组中的变化，并根据情况来启动和终止Pod。其过程包括在需要时对存储卷进行配置，将docker镜像下载到指定节点中，以及通过docker API来启动和终止某个容器
+
+# minikube模拟kubernetes集群
+
+![image-20230326200625881](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20230326200625881.png)
+
+安装minikube
+
+运行minikube `minikube start`
+
+## 在minikube中部署应用
+
+### 1. 准备deployment.yaml文件
+
+在vscode中安装kubernetes插件
+
+在应用的根目录创建deployment.yaml文件（和Dockerfile类似），定义了应用的基本信息，比如它由哪些Pod组成，里面运行了哪些容器。在deployment.yaml文件里输入deployment让vscode生成最基本配置
+
+把myapp改为应用名字finance
+
+<img src="https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20230326201227318.png" alt="image-20230326201227318" style="zoom: 67%;" />
+
+![image-20230326201313680](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20230326201313680.png)
+
+![image-20230326201453608](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20230326201453608.png)
+
+### 2. 定义service
+
+<img src="https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20230326201618339.png" alt="image-20230326201618339" style="zoom:67%;" />
+
+虽然每个Pod都有一个ip，但这对外网不可见，需要kubernetes中另一个重要组件 services
+
+最基本的服务NodePort
+
+![image-20230326201815302](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20230326201815302.png)
+
+kubernetes还提供LoadBalancer或Ingress来实现负载的均衡
+
+在deployment.yaml文件中输入---，添加service提供服务
+
+<img src="https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20230326202026153.png" alt="image-20230326202026153" style="zoom:50%;" />
+
+在selector中指定，将数据转发到哪个Pod
+
+![image-20230326202201428](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20230326202201428.png)
+
+随后的type指定了服务的类型，即NodePort
+
+后面的port和targetPort设置成5000和容器端口保持一致
+
+最后的nodePort指定了暴露给外网的端口设置成30080
+
+### 3. 部署
+
+用命令行工具kubectl来与kubernetes集群进行交互，验证`kubectl version`
+
+部署应用`kubectl apply -f deployment.yaml`
+
+查看所有Pods状态 `kubectl get pods`
+
+![image-20230326202858203](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20230326202858203.png)
+
+查看所有创建的服务 `kubectl get services`
+
+![image-20230326203008417](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20230326203008417.png)
+
+访问被部署的应用`minikube service finance-np-service`我们服务名
+
+从集群删除应用 `kubectl delete -f deployment.yaml`
