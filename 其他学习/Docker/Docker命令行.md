@@ -10,6 +10,8 @@
 
   * 运行时定义容器名字 加上`--name myname`
 
+  * 退出容器后删除容器 加上`--rm`，--rm选项不能与-d同时使用，即只能自动清理foreground容器，不能自动清理detached容器
+
   * 将本地文件夹与容器执行文件夹绑定 `-v /users/Desktop/yi/:/egg`
 
     本地文件夹内容只可读（即容器文件改变，本地文件不变） `-v /users/Desktop/yi/:/egg:ro`
@@ -28,6 +30,12 @@
 * 停止容器运行 `docker stop 容器ID`
 
 * 删除容器 `docker rm -f 容器ID`
+
+# 容器与主机之间
+
+* 数据拷贝 `docker cp`
+  * 将主机/www/runoob目录拷贝到容器96f7f14e99ab的/www目录下 `docker cp /www/runoob 96f7f14e99ab:/www/`
+  * 将容器96f7f14e99ab的/www目录拷贝到主机的/tmp目录中 `docker cp  96f7f14e99ab:/www /tmp/`
 
 # 数据卷
 
