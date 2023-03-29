@@ -12,7 +12,7 @@ https://segmentfault.com/a/1190000043336588?utm_source=sf-similar-article
 
 * `docker cp repo:/git/getting-started/ .`
 
-  在本地有了getting-started文件夹
+  移动文件夹，在本地有了getting-started文件夹
 
   ![image-20230328210811808](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20230328210811808.png)
 
@@ -39,3 +39,22 @@ https://segmentfault.com/a/1190000043336588?utm_source=sf-similar-article
 * `docker push liang22/docker101tutorial`
 
   push到docker hub
+
+# vscode连接docker容器
+
+右键具体container->attach in new window，即进入容器内部
+
+![image-20230329163447518](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20230329163447518.png)
+
+可以通过拖拽的方式上传文件
+
+* 安装vscode插件
+
+  `docker`，`dev-containers`，`remote-ssh`
+
+## ssh连接容器
+
+增加用户权限`sudo gpasswd -a 当前登录用户名 docker`
+
+重启服务器`sudo reboot`
+

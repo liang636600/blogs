@@ -81,6 +81,11 @@ VOLUME 路径
 VOLUME ["路径1","路径2"]
 ```
 VOLUME指令可以将容器及容器产生的数据分离开来，这样，当利用docker rm container命令删除容器时，不会影响相关数据
+
+```
+VOLUME [/git] //表示容器中/git 路径由一个volume持久存储
+```
+
 ## EXPOSE指令
 声明运行时的容器服务端口
 `EXPOSE 端口`
