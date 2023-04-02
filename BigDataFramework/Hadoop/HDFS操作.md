@@ -6,7 +6,7 @@
 
 删除在根目录下面创建的input文件夹`hdfs dfs -rm -r /input`
 
-查询`hdfs dfs -ls /user`
+查询`hdfs dfs -ls /user`， `hadoop fs -ls /`
 
 根目录为/，比如在根目录下创建一个文件夹为`hdfs dfs -mkdir /input` 
 

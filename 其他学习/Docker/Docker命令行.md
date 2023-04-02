@@ -23,13 +23,15 @@
   * -it表示交互，以terminal的形式
   * `/bin/sh`表示执行一个新的bash shell，想要退出输入`exit`
 
-* 列出所有容器 `docker ps`，返回 容器ID Image Command 使用端口号
+* 列出所有容器（存活） `docker ps`，返回 容器ID Image Command 使用端口号
 
   * 所有容器包括停止的 `-a`
 
 * 停止容器运行 `docker stop 容器ID`
 
 * 删除容器 `docker rm -f 容器ID`
+
+* 保存容器为image `docker commit <CONTAINER ID> <your-image-name>`
 
 # 容器与主机之间
 
