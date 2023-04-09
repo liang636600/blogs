@@ -6,18 +6,6 @@
 
 根据 HDFS 部署图，NameNode 和 DataNode 都在scala_dev上，因此，需要做 scala_dev无密码登录自己，操作如下。
 
-**失效：**
-
-![image-20211129110114392](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211129110114392.png)
-
-`ssh-keygen -t dsa -P '' -f ~/.ssh/id_dsa`
-
-`cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys`
-
-`chmod 600 ~/.ssh/authorized_keys`
-
----
-
 ![image-20211129111201730](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/image-20211129111201730.png)
 
 ` ssh-keygen -t rsa`
