@@ -1,6 +1,6 @@
 环境：ubuntu20+jdk16源码
 
-主要步骤参考`https://blog.csdn.net/qq_25117137/article/details/118122978`
+主要步骤参考`https://blog.csdn.net/qq_25117137/article/details/118122978`第4步
 
 ![在这里插入图片描述](https://raw.githubusercontent.com/liang636600/cloudImg/master/images/20210623003207697.png)
 

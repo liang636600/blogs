@@ -9,7 +9,7 @@ sudo apt-get install libx11-dev libxext-dev libxrender-dev libxrandr-dev libxtst
 sudo apt-get install libasound2-dev
 sudo apt-get install libffi-dev
 sudo apt-get install autoconf
-apt-get install -y autoconf zip libx11-dev libxext-dev libxrender-dev libxtst-dev libxt-dev libcups2-dev libfontconfig1-dev libasound2-dev
+sudo apt-get install -y autoconf zip libx11-dev libxext-dev libxrender-dev libxtst-dev libxt-dev libcups2-dev libfontconfig1-dev libasound2-dev
 ```
 
 
@@ -50,21 +50,12 @@ apt-get install -y autoconf zip libx11-dev libxext-dev libxrender-dev libxtst-de
 
     `bash configure --with-debug-level=slowdebug --disable-warnings-as-errors`
 
+    或直接运行（跳过之后的2,3部分）`bash configure --enable-option-checking=fatal --with-extra-cxxflags=-Wno-error --with-extra-cflags=-Wno-error --disable-warnings-as-errors --with-debug-level=slowdebug make`
+
     这里的slowdebug是为了更好的看源码设置的
 
 2. 安装bear  `sudo apt install -y bear`
+
 3. 最后`bear make images`慢慢等待编译过程了
+
 4. 如果需要使用clion对jdk16源码调试参考博客（https://blog.csdn.net/qq_25117137/article/details/118122978）
-
-
-
-
-
-
-
-
-
-
-
-
-
