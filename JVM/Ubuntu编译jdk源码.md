@@ -50,12 +50,16 @@ sudo apt-get install -y autoconf zip libx11-dev libxext-dev libxrender-dev libxt
 
     `bash configure --with-debug-level=slowdebug --disable-warnings-as-errors`
 
-    或直接运行（跳过之后的2,3部分）`bash configure --enable-option-checking=fatal --with-extra-cxxflags=-Wno-error --with-extra-cflags=-Wno-error --disable-warnings-as-errors --with-debug-level=slowdebug make`
+    或直接运行（跳过之后的2,3部分）`bash configure --enable-option-checking=fatal --with-extra-cxxflags=-Wno-error --with-extra-cflags=-Wno-error --disable-warnings-as-errors --with-debug-level=slowdebug`
 
     这里的slowdebug是为了更好的看源码设置的
 
-2. 安装bear  `sudo apt install -y bear`
+    ```
+    bash configure --enable-option-checking=fatal --with-extra-cxxflags=-Wno-error --with-extra-cflags=-Wno-error --disable-warnings-as-errors --with-debug-level=release --with-boot-jdk=/home/yicheng/jdk/jdk16/jdk-16/
+    ```
+
+2. 安装bear  `sudo apt install -y bear` 或者直接 `make compile-commands`
 
 3. 最后`bear make images`慢慢等待编译过程了
 
-4. 如果需要使用clion对jdk16源码调试参考博客（https://blog.csdn.net/qq_25117137/article/details/118122978）
+4. 如果需要使用clion对jdk16源码调试参考博客（https://blog.csdn.net/qq_25117137/article/details/118122978）或直接参考官方博客(https://blog.jetbrains.com/clion/2020/03/openjdk-with-clion/)
