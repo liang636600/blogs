@@ -58,7 +58,7 @@ sudo apt-get install -y autoconf zip libx11-dev libxext-dev libxrender-dev libxt
     bash configure --enable-option-checking=fatal --with-extra-cxxflags=-Wno-error --with-extra-cflags=-Wno-error --disable-warnings-as-errors --with-debug-level=release --with-boot-jdk=/home/yicheng/jdk/jdk16/jdk-16/
     ```
 
-2. 安装bear  `sudo apt install -y bear` 或者直接 `make compile-commands`
+2. 安装bear  `sudo apt install -y bear` 或者直接 `make compile-commands` 之后 `make`
 
 3. 最后`bear make images`慢慢等待编译过程了
 
